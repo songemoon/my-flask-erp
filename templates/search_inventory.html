@@ -41,9 +41,9 @@
                 <tbody>
                     {% for item in items %}
                         {% if not query or
-                              (query.lower() in (item.product_name or '').lower() or
-                               query.lower() in (item.sku or '').lower() or
-                               query.lower() in (item.barcode or '').lower()) %}
+                            (query.lower() in (item['product_name'] or '').lower() or
+                            query.lower() in (item['sku'] or '').lower() or
+                            query.lower() in (item['barcode'] or '').lower()) %}
                             <tr class="{{ item.get('highlight', '') }}">
                                 <td>{{ item['sku'] }}</td>
                                 <td class="left-align">{{ item['product_name'] }}</td>
@@ -80,9 +80,9 @@
                 <tr>
                     <td>{{ item['order_code'] }}</td>
                     <td>{{ item['product_sku'] }}</td>
-                    <td class="left-align">{{ item['product_name'[] }}</td>
+                    <td class="left-align">{{ item['product_name'] }}</td>
                     <td style="padding: 0;">
-                        <a href="{{ url_for('receive_order', order_code=item.order_code) }}">
+                        <a href="{{ url_for('receive_order', order_code=item['order_code']) }}">
                             <button type="button" class="receive-button">입고</button>
                         </a>
                     </td>
