@@ -77,9 +77,15 @@ def sales_overview():
 
     # 실재고 데이터
     cursor.execute("""
-        SELECT sku, product_name, expiry_text, SUM(quantity) as quantity 
-        FROM real_stock 
-        GROUP BY sku, expiry_text
+        SELECT
+            sku,
+            MIN(product_name) AS product_name,   -- MIN()으로 대표값 집계
+            expiry_text,
+            SUM(quantity)     AS quantity
+        FROM real_stock
+        GROUP BY
+            sku,
+            expiry_text
     """)
     stock_data = cursor.fetchall()
 

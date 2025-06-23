@@ -74,9 +74,12 @@ def inventory_in():
                 product=None
             )
 
-        if len(products) == 1 or any(p[0] == identifier for p in products):
-            product = next((p for p in products if p[0] == identifier), products[0])
-            sku, name, english_name, barcode = product
+        if len(products) == 1 or any(p["sku"] == identifier for p in products):
+            product = next((p for p in products if p["sku"] == identifier), products[0])
+            sku          = product["sku"]
+            name         = product["name"]
+            english_name = product["english_name"]
+            barcode      = product["barcode"]
         else:
             conn.close()
             return render_template(
@@ -160,9 +163,12 @@ def inventory_out():
             message = "❌ 해당 SKU 또는 바코드의 제품을 찾을 수 없습니다."
             return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
-        if len(products) == 1 or any(p[0] == identifier for p in products):
-            product = next((p for p in products if p[0] == identifier), products[0])
-            sku, name, english_name, barcode = product
+        if len(products) == 1 or any(p["sku"] == identifier for p in products):
+            product = next((p for p in products if p["sku"] == identifier), products[0])
+            sku          = product["sku"]
+            name         = product["name"]
+            english_name = product["english_name"]
+            barcode      = product["barcode"]
         else:
             conn.close()
             return render_template(
@@ -359,10 +365,12 @@ def warehouse_transfer():
             message = "❌ 해당 SKU 또는 바코드의 제품을 찾을 수 없습니다."
             return render_template("manage_inventory.html", action="transfer", message=message, identifier=identifier, product=None)
 
-        if len(products) == 1 or any(p[0] == identifier for p in products):
-            product = next((p for p in products if p[0] == identifier), products[0])
-            sku, name, english_name, barcode = product
-            product_data = {"name": name, "english_name": english_name}
+        if len(products) == 1 or any(p["sku"] == identifier for p in products):
+            product = next((p for p in products if p["sku"] == identifier), products[0])
+            sku          = product["sku"]
+            name         = product["name"]
+            english_name = product["english_name"]
+            barcode      = product["barcode"]
         else:
             conn.close()
             return render_template(
@@ -473,9 +481,9 @@ def manage_inventory():
 
             if row:
                 product = {
-                    "sku": row[0],
-                    "name": row[1],
-                    "english_name": row[2],
+                    "sku":          row["sku"],
+                    "name":         row["name"],
+                    "english_name": row["english_name"],
                 }
             else:
                 return render_template(

@@ -249,7 +249,7 @@ def print_order(order_code):
 def receive_order(order_code):
     if request.method == "POST":
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         idx = 0
         while True:
@@ -258,71 +258,80 @@ def receive_order(order_code):
             if not sku:
                 break
 
-            unit_per_box = int(request.form.get(f"unit_per_box_{idx}", 1))
-            box_qty = int(request.form.get(f"box_qty_{idx}", 0))
-            piece_qty = int(request.form.get(f"piece_qty_{idx}", 0))
+            unit_per_box = safe_int(request.form.get(f"unit_per_box_{idx}", 1))
+            box_qty = safe_int(request.form.get(f"box_qty_{idx}", 0))
+            piece_qty = safe_int(request.form.get(f"piece_qty_{idx}", 0))
             warehouse = request.form.get(f"warehouse_{idx}")
             shelf_location = request.form.get(f"shelf_location_{idx}", "없음")
-            expiration_date = request.form.get(f"expiration_date_{idx}", "")
+
+            # 유통기한 처리: 빈 값은 None으로
+            expiration_date_str = request.form.get(f"expiration_date_{idx}", "").strip()
+            expiration_date = expiration_date_str if expiration_date_str else None
 
             total_qty = box_qty * unit_per_box + piece_qty
 
-            cursor.execute("SELECT barcode, english_name FROM products WHERE sku = %s", (sku,))
-            product_row = cursor.fetchone()
-            if product_row:
-                barcode, english_name = product_row
-            else:
-                barcode, english_name = "", ""
+            # 제품 정보 조회
+            cursor.execute(
+                "SELECT barcode, english_name FROM products WHERE sku = %s", (sku,)
+            )
+            product_row = cursor.fetchone() or {}
+            barcode = product_row.get('barcode', '')
+            english_name = product_row.get('english_name', '')
 
             # inventory 저장
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO inventory (
                     sku, product_name, english_name, barcode,
                     unit_per_box, box_qty, piece_qty, total_qty,
                     warehouse, shelf_location, order_number, expiration_date, is_expected
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0)
-            """, (
-                sku, name, english_name, barcode,
-                unit_per_box, box_qty, piece_qty, total_qty,
-                warehouse, shelf_location, order_code, expiration_date
-            ))
+                """, (
+                    sku, name, english_name, barcode,
+                    unit_per_box, box_qty, piece_qty, total_qty,
+                    warehouse, shelf_location, order_code, expiration_date
+                )
+            )
 
             # 입출고 기록
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO inventory_movement (
                     sku, product_name, product_name_en, movement_type,
                     quantity_box, quantity_piece, to_warehouse, expiration_date
                 ) VALUES (%s, %s, %s, '입고', %s, %s, %s, %s)
-            """, (
-                sku, name, english_name, box_qty, piece_qty, warehouse, expiration_date
-            ))
+                """, (
+                    sku, name, english_name,
+                    box_qty, piece_qty, warehouse, expiration_date
+                )
+            )
 
             idx += 1
 
         conn.commit()
         conn.close()
 
-        return redirect(url_for("receive_order", order_code=order_code, success="입고가 완료되었습니다."))
+        return redirect(
+            url_for("receive_order", order_code=order_code, success="입고가 완료되었습니다.")
+        )
 
-    # ✅ GET 요청
+    # GET 요청: 입고 완료된 SKU 확인
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("SELECT sku FROM inventory WHERE order_number = %s", (order_code,))
-    received_skus = set(row["sku"] for row in cursor.fetchall())
+    received_skus = {row['sku'] for row in cursor.fetchall()}
 
-
-    cursor.execute("SELECT sku FROM inventory WHERE order_number = %s", (order_code,))
-    received_skus = set(row["sku"] for row in cursor.fetchall())
-
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT o.*, p.barcode
         FROM orders o
         LEFT JOIN products p ON o.product_sku = p.sku
         WHERE o.order_code = %s
-    """, (order_code,))
+        """, (order_code,)
+    )
     all_items = cursor.fetchall()
-    items = [item for item in all_items if item["product_sku"] not in received_skus]
+    items = [item for item in all_items if item.get('product_sku') not in received_skus]
 
     conn.close()
 
@@ -330,9 +339,21 @@ def receive_order(order_code):
     error = request.args.get("error")
 
     if not items:
-        return render_template("receive_order.html", items=[], order_code=order_code, success="모든 품목이 입고되었습니다.")
+        return render_template(
+            "receive_order.html",
+            items=[],
+            order_code=order_code,
+            success="모든 품목이 입고되었습니다."
+        )
 
-    return render_template("receive_order.html", items=items, order_code=order_code, success=success, error=error)
+    return render_template(
+        "receive_order.html",
+        items=items,
+        order_code=order_code,
+        success=success,
+        error=error
+    )
+
 
 def delete_order(order_code):
     user = session.get("user")

@@ -82,15 +82,18 @@ def api_get_schedules():
 
     return jsonify(result)
 
-
 @schedule_bp.route("/calendar")
 def view_calendar():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT DISTINCT employee_name FROM schedules WHERE employee_name IS NOT NULL")
-    employees = [row[0] for row in cursor.fetchall()]
+    cursor.execute(
+        "SELECT DISTINCT employee_name FROM schedules WHERE employee_name IS NOT NULL"
+    )
+    # 수정: 숫자 인덱스(row[0]) → 딕셔너리 키 접근(row['employee_name'])
+    employees = [row["employee_name"] for row in cursor.fetchall()]
     conn.close()
     return render_template("calendar.html", employees=employees)
+
 
 
 @schedule_bp.route("/schedule/edit/<int:schedule_id>", methods=["GET", "POST"])
