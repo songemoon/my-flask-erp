@@ -159,7 +159,7 @@
             <td>{{ row['from_warehouse'] or '-' }}</td>
             <td>{{ row['to_warehouse'] or '-' }}</td>
             <td>{{ row['expiration_date'] or '-' }}</td>
-            <td>{{ row['timestamp'][:10] }}</td>
+            <td>{{ row['timestamp'].strftime('%Y-%m-%d') }}</td>
             <td>{{ row['reason'] or '-' }}</td>
         </tr>
         {% endfor %}
