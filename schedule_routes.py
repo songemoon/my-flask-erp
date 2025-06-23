@@ -168,3 +168,21 @@ def delete_schedule(schedule_id):
 
     conn.close()
     return render_template("confirm_delete.html", schedule=schedule)
+
+def create_schedule_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS schedules (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            start TEXT NOT NULL,
+            end TEXT,
+            type TEXT NOT NULL,
+            employee_name TEXT,
+            username TEXT,
+            password TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()

@@ -81,6 +81,7 @@ from auth import (
     admin_user_manage,
     change_password
 )
+from schedule_routes import (create_schedule_table)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -366,6 +367,7 @@ def init_db():
     create_order_table()
     create_sales_volume_table()
     create_real_stock_table()
+    create_schedule_table()
     return "✅ DB 초기화가 완료되었습니다."
 
 
