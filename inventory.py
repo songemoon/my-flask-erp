@@ -274,8 +274,8 @@ def search_inventory():
     cursor.execute("SELECT * FROM inventory WHERE is_active = 1")
     all_rows = cursor.fetchall()
 
-    def highlight_row(row):
-        exp = row[13]  # expiration_date
+    def highlight_row(row_dict):
+        exp = row_dict.get("expiration_date")
         if exp:
             exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
             if exp_date < today:
@@ -287,7 +287,7 @@ def search_inventory():
     all_inventory = []
     for r in all_rows:
         row_dict = dict(zip([desc[0] for desc in cursor.description], r))
-        row_dict["highlight"] = highlight_row(r)
+        row_dict["highlight"] = highlight_row(row_dict)
         all_inventory.append(row_dict)
 
     grouped_inventory = defaultdict(list)
