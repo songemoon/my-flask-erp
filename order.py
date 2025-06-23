@@ -57,7 +57,7 @@ def new_order():
 
     # ✅ GET 요청 처리
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT id, name FROM suppliers ORDER BY name")
     suppliers = cursor.fetchall()
     conn.close()

@@ -136,8 +136,10 @@ def sales_overview():
         row = dict(stock)
         row["incoming_qty"] = incoming.get(sku, 0)
         row["avg_sales"] = avg_sales.get(sku, 0)
+
         for month in recent_months:
-            row[month] = sales_by_sku[sku].get(month, 0)
+            row[month] = sales_by_sku.get(sku, {}).get(month, 0)
+
         final_data.append(row)
 
     # 검색 필터

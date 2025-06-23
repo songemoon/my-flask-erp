@@ -56,7 +56,7 @@ def admin_add_user():
         else:
             pw_hash = hash_password(password)
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             try:
                 cursor.execute("""
                     INSERT INTO users (username, password, name, english_name)
@@ -73,7 +73,7 @@ def admin_add_user():
         delete_id = request.form.get("user_id")
         if delete_id and int(delete_id) != session["user"]["id"]:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("DELETE FROM users WHERE id = %s", (delete_id,))
             conn.commit()
             conn.close()
@@ -82,7 +82,7 @@ def admin_add_user():
             message = "본인 계정은 삭제할 수 없습니다."
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT id, username, name, english_name FROM users ORDER BY id")
     users = cursor.fetchall()
     conn.close()
@@ -145,6 +145,7 @@ def admin_user_manage():
         else:
             password_hash = hash_password(password)
             conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor = conn.cursor()
             try:
                 cursor.execute("""
@@ -159,7 +160,7 @@ def admin_user_manage():
                 conn.close()
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT id, username, name, english_name FROM users ORDER BY id")
     users = cursor.fetchall()
     conn.close()
