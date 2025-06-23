@@ -158,20 +158,21 @@ def inventory_out():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute("SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
-        products = cursor.fetchall()        
-
+        # 제품 조회
+        cursor.execute(
+            "SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s",
+            (identifier, identifier)
+        )
+        products = cursor.fetchall()
         if not products:
             conn.close()
             message = "❌ 해당 SKU 또는 바코드의 제품을 찾을 수 없습니다."
             return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
+        # 단일 제품 선택
         if len(products) == 1 or any(p["sku"] == identifier for p in products):
             product = next((p for p in products if p["sku"] == identifier), products[0])
-            sku          = product["sku"]
-            name         = product["name"]
-            english_name = product["english_name"]
-            barcode      = product["barcode"]
+            sku = product["sku"]
         else:
             conn.close()
             return render_template(
@@ -182,9 +183,12 @@ def inventory_out():
                 preserved=request.form
             )
 
+        # 유통기한 미지정 시 재고 조회
         if not expiration_date or expiration_date.strip() == "":
             cursor.execute(
-                "SELECT id, expiration_date, total_qty FROM inventory WHERE sku = %s AND total_qty > 0 ORDER BY expiration_date ASC LIMIT 1",
+                "SELECT id, expiration_date, total_qty FROM inventory "
+                "WHERE sku = %s AND total_qty > 0 "
+                "ORDER BY expiration_date ASC LIMIT 1",
                 (sku,)
             )
             row = cursor.fetchone()
@@ -193,12 +197,11 @@ def inventory_out():
                 message = "❌ 출고 가능한 재고가 없습니다."
                 return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
-            # 수정된 부분: 딕셔너리 키 접근
+            # 수정된 부분: dict key 접근 및 None 처리
             inventory_id = row["id"]
-            exp_date     = row["expiration_date"]
-            current_qty  = row["total_qty"]
+            exp_date = row["expiration_date"]
+            current_qty = row["total_qty"]
 
-            # exp_date가 None인 경우 -> None, 아니면 형식에 맞춰 문자열 변환
             if exp_date is None:
                 expiration_date = None
             elif isinstance(exp_date, str):
@@ -207,7 +210,8 @@ def inventory_out():
                 expiration_date = exp_date.strftime("%Y-%m-%d")
         else:
             cursor.execute(
-                "SELECT id, total_qty FROM inventory WHERE sku = %s AND expiration_date = %s AND total_qty > 0 LIMIT 1",
+                "SELECT id, total_qty FROM inventory "
+                "WHERE sku = %s AND expiration_date = %s AND total_qty > 0 LIMIT 1",
                 (sku, expiration_date)
             )
             row = cursor.fetchone()
@@ -217,37 +221,38 @@ def inventory_out():
                 return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
             inventory_id = row["id"]
-            current_qty  = row["total_qty"]
+            current_qty = row["total_qty"]
 
+        # 재고 부족 체크
         if total_out_qty > current_qty:
             conn.close()
             message = f"❌ 재고 부족: 현재 {current_qty}개, 요청 {total_out_qty}개"
             return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
-        try:
-            exp = datetime.strptime(expiration_date, "%Y-%m-%d").date()
-            days_left = (exp - today).days
-            if days_left < 0:
-                warning = f"❗ 유통기한이 {abs(days_left)}일 경과되었습니다."
-            elif days_left <= 30:
-                warning = f"⚠️ 유통기한이 {days_left}일 남았습니다."
-        except Exception:
-            pass
-
+        # 출고 후 재고 업데이트
         cursor.execute("UPDATE inventory SET total_qty = total_qty - %s WHERE id = %s", (total_out_qty, inventory_id))
 
+        # 제품명 조회 및 dict 접근
         cursor.execute("SELECT name, english_name FROM products WHERE sku = %s", (sku,))
         row = cursor.fetchone()
-        name = row["name"] if row else "알수없음"
-        english_name = row["english_name"] if row else "unknown"
+        if row:
+            name = row["name"]
+            english_name = row["english_name"]
+        else:
+            name = "알수없음"
+            english_name = "unknown"
 
-        cursor.execute("""
+        # 이동 기록
+        cursor.execute(
+            """
             INSERT INTO inventory_movement (
                 sku, product_name, product_name_en, movement_type,
                 quantity_box, quantity_piece,
                 from_warehouse, expiration_date, reason
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (sku, name, english_name, movement_type, box_qty, piece_qty, warehouse, expiration_date, reason))
+            """,
+            (sku, name, english_name, movement_type, box_qty, piece_qty, warehouse, expiration_date, reason)
+        )
 
         conn.commit()
         conn.close()
@@ -265,6 +270,7 @@ def inventory_out():
         )
 
     return render_template("manage_inventory.html", action="out", identifier="", message=message, product=None)
+
 
 def search_inventory():
     query = request.args.get("q", "").strip()
