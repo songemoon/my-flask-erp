@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, date
 import psycopg2
 import psycopg2.extras
 from db import get_db_connection
+from inventory import safe_int
+
 
 def new_order():
     user = session.get("user")

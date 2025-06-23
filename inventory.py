@@ -56,8 +56,11 @@ def inventory_in():
         warehouse = request.form.get("warehouse")
         shelf_location = request.form.get("shelf_location")
         order_number = request.form.get("order_number")
-        expiration_date = request.form.get("expiration_date")
-
+        expiration_date_str = request.form.get("expiration_date", "").strip()
+        if expiration_date_str == "":
+            expiration_date = None
+        else:
+            expiration_date = expiration_date_str
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
