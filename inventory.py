@@ -194,10 +194,17 @@ def inventory_out():
                 return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
             # 수정된 부분: 딕셔너리 키 접근
-            inventory_id   = row["id"]
-            exp_date       = row["expiration_date"]
-            current_qty    = row["total_qty"]
-            expiration_date = exp_date if isinstance(exp_date, str) else exp_date.strftime("%Y-%m-%d")
+            inventory_id = row["id"]
+            exp_date     = row["expiration_date"]
+            current_qty  = row["total_qty"]
+
+            # exp_date가 None인 경우 -> None, 아니면 형식에 맞춰 문자열 변환
+            if exp_date is None:
+                expiration_date = None
+            elif isinstance(exp_date, str):
+                expiration_date = exp_date
+            else:
+                expiration_date = exp_date.strftime("%Y-%m-%d")
         else:
             cursor.execute(
                 "SELECT id, total_qty FROM inventory WHERE sku = %s AND expiration_date = %s AND total_qty > 0 LIMIT 1",
