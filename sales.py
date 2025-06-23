@@ -20,7 +20,7 @@ def upload_sales_volume():
             message = "❌ 연도, 월, 파일을 모두 입력해주세요."
         else:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             try:
                 year_int = int(year)
                 month_int = int(month)
@@ -155,7 +155,7 @@ def sales_overview():
 
 def create_sales_volume_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sales_volume (
             id SERIAL PRIMARY KEY,

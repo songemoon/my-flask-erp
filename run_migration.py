@@ -10,7 +10,7 @@ DB_URL = os.environ.get("DATABASE_URL")
 
 def rename_orders_to_backup():
     conn = psycopg2.connect(DB_URL)
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("ALTER TABLE orders RENAME TO orders_backup;")
     conn.commit()
     conn.close()
@@ -18,7 +18,7 @@ def rename_orders_to_backup():
 
 def create_new_orders_table():
     conn = psycopg2.connect(DB_URL)
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE orders (
             id SERIAL PRIMARY KEY,
@@ -39,7 +39,7 @@ def create_new_orders_table():
 
 def copy_data_to_new_orders():
     conn = psycopg2.connect(DB_URL)
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         INSERT INTO orders (
             order_code, supplier_id, supplier_name,

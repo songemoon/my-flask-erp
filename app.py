@@ -174,7 +174,7 @@ def upload_products():
 
                 # DB 저장
                 conn = get_db_connection()
-                cursor = conn.cursor()
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
                 cursor.execute("""
                     INSERT INTO products 
                     (sku, name, english_name, category_main, category_sub, category_suffix, barcode)

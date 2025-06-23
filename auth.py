@@ -17,7 +17,7 @@ def login_required(view_function):
 def authenticate_user(username, password):
     hashed_pw = hashlib.sha256(password.encode()).hexdigest()
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, hashed_pw))
     user = cursor.fetchone()
     conn.close()
@@ -25,7 +25,7 @@ def authenticate_user(username, password):
 
 def create_user_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -117,7 +117,7 @@ def logout():
 
 def admin_user_list():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT id, username, name FROM users ORDER BY id")
     users = cursor.fetchall()
     conn.close()
@@ -125,7 +125,7 @@ def admin_user_list():
 
 def admin_delete_user(user_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
     conn.commit()
     conn.close()
@@ -146,7 +146,6 @@ def admin_user_manage():
             password_hash = hash_password(password)
             conn = get_db_connection()
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            cursor = conn.cursor()
             try:
                 cursor.execute("""
                     INSERT INTO users (username, password, name, english_name)
@@ -187,7 +186,7 @@ def change_password():
             return redirect(url_for("change_password"))
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT password FROM users WHERE id = %s", (current["id"],))
         row = cursor.fetchone()
         conn.close()
@@ -198,7 +197,7 @@ def change_password():
 
         hashed_new = hash_password(new_pw)
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_new, current["id"]))
         conn.commit()
         conn.close()

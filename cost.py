@@ -38,7 +38,7 @@ def register_cost(order_code):
         common_unit_cost = round(total_amount / total_qty, 4) if total_amount else 0
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("DELETE FROM cost_history WHERE order_code = %s", (order_code,))
         cursor.execute("DELETE FROM cost_expense WHERE order_code = %s", (order_code,))
@@ -139,7 +139,7 @@ def view_cost_history():
 
 def create_cost_history_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cost_history (
             id SERIAL PRIMARY KEY,
@@ -157,7 +157,7 @@ def create_cost_history_table():
 
 def create_cost_expense_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cost_expense (
             id SERIAL PRIMARY KEY,

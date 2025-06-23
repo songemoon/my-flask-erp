@@ -20,7 +20,7 @@ def add_schedule():
         password_hash = hashlib.sha256(password.encode()).hexdigest() if not user and password else None
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS schedules (
@@ -86,7 +86,7 @@ def api_get_schedules():
 @schedule_bp.route("/calendar")
 def view_calendar():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT DISTINCT employee_name FROM schedules WHERE employee_name IS NOT NULL")
     employees = [row[0] for row in cursor.fetchall()]
     conn.close()
@@ -171,7 +171,7 @@ def delete_schedule(schedule_id):
 
 def create_schedule_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS schedules (
             id SERIAL PRIMARY KEY,

@@ -11,7 +11,7 @@ def view_movements():
     movement_type = request.args.get("movement_type")
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     query = """
         SELECT m.*, p.name AS product_name, p.english_name AS product_name_en, p.barcode
@@ -53,7 +53,7 @@ def view_movements():
 
 def create_inventory_movement_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS inventory_movement (
             id SERIAL PRIMARY KEY,

@@ -8,7 +8,7 @@ def new_order():
     user = session.get("user")
     if request.method == "POST":
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         supplier_id = request.form.get("supplier_id")
 
@@ -71,7 +71,7 @@ def list_orders():
     query = request.args.get("q", "").strip()
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     base_sql = """
         SELECT 
@@ -109,7 +109,7 @@ def list_orders():
 def view_order(order_code):
     user = session.get("user")
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cursor.execute("""
         SELECT 
@@ -139,7 +139,7 @@ def view_order(order_code):
 def edit_order(order_code):
     user = session.get("user")
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     if request.method == "POST":
         supplier_id = request.form.get("supplier_id")
@@ -220,7 +220,7 @@ def edit_order(order_code):
 def print_order(order_code):
     user = session.get("user")
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cursor.execute("""
         SELECT 
@@ -249,7 +249,7 @@ def print_order(order_code):
 def receive_order(order_code):
     if request.method == "POST":
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         idx = 0
         while True:
@@ -306,8 +306,11 @@ def receive_order(order_code):
 
     # ✅ GET 요청
     conn = get_db_connection()
-    conn.row_factory = psycopg2.extras.RealDictCursor
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cursor.execute("SELECT sku FROM inventory WHERE order_number = %s", (order_code,))
+    received_skus = set(row["sku"] for row in cursor.fetchall())
+
 
     cursor.execute("SELECT sku FROM inventory WHERE order_number = %s", (order_code,))
     received_skus = set(row["sku"] for row in cursor.fetchall())
@@ -337,7 +340,7 @@ def delete_order(order_code):
         return "로그인 정보가 없습니다.", 403
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute("SELECT staff_name FROM orders WHERE order_code = %s", (order_code,))
     row = cursor.fetchone()
@@ -363,7 +366,7 @@ def delete_order(order_code):
 def generate_order_code():
     year = datetime.today().strftime("%y")  # 예: '25'
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT COUNT(*) FROM orders WHERE order_code LIKE %s", (f"{year}-%",))
     count = cursor.fetchone()[0]
     conn.close()
@@ -371,7 +374,7 @@ def generate_order_code():
 
 def create_order_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id SERIAL PRIMARY KEY,

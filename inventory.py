@@ -10,7 +10,7 @@ from db import get_db_connection
 
 def create_inventory_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
             id SERIAL PRIMARY KEY,
@@ -59,7 +59,7 @@ def inventory_in():
         expiration_date = request.form.get("expiration_date")
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
         products = cursor.fetchall()
@@ -150,7 +150,7 @@ def inventory_out():
         today = datetime.today().date()
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
         products = cursor.fetchall()
@@ -256,7 +256,7 @@ def search_inventory():
     today = datetime.today().date()
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # 전체 재고 처리
     cursor.execute("UPDATE inventory SET is_active = 0 WHERE total_qty = 0")
@@ -349,7 +349,7 @@ def warehouse_transfer():
             return render_template("manage_inventory.html", action="transfer", message=message, identifier=identifier, product=None)
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
         products = cursor.fetchall()
@@ -466,7 +466,7 @@ def manage_inventory():
         # 1단계: 제품 식별자만 입력된 경우 → 제품정보 조회
         if "box_qty" not in request.form:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute("SELECT sku, name, english_name FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
             row = cursor.fetchone()
             conn.close()

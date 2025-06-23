@@ -49,7 +49,7 @@ def manage_suppliers():
 
 def create_supplier_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS suppliers (
             id SERIAL PRIMARY KEY,
@@ -64,7 +64,7 @@ def create_supplier_table():
 
 def generate_supplier_code(country_code):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         SELECT COUNT(*) FROM suppliers WHERE country_code = %s
     """, (country_code,))
@@ -76,7 +76,7 @@ def generate_supplier_code(country_code):
 
 def delete_supplier(supplier_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("DELETE FROM suppliers WHERE id = %s", (supplier_id,))
     conn.commit()
     conn.close()

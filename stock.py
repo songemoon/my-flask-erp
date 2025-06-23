@@ -7,7 +7,7 @@ from db import get_db_connection  # PostgreSQL 접속 함수
 
 def create_real_stock_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS real_stock (
             id SERIAL PRIMARY KEY,
@@ -34,7 +34,7 @@ def upload_real_stock():
                 reader = csv.DictReader(stream)
 
                 conn = get_db_connection()
-                cursor = conn.cursor()
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
                 # 기존 데이터 삭제
                 cursor.execute("DELETE FROM real_stock")

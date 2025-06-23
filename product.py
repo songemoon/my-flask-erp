@@ -109,7 +109,7 @@ def generate_sku(category_main, category_sub, suffix):
         raise ValueError("유효하지 않은 소분류입니다.")
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     for i in range(1, 10000):
         serial = f"{i:04}"
@@ -127,7 +127,7 @@ def generate_sku(category_main, category_sub, suffix):
 
 def create_table():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
@@ -157,7 +157,7 @@ def register_product():
 
         # 중복 바코드 검사
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT * FROM products WHERE barcode = %s", (barcode,))
         existing = cursor.fetchall()
         conn.close()
@@ -182,7 +182,7 @@ def register_product():
 
         # 실제 등록
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("""
             INSERT INTO products (
                 sku, name, english_name, category_main,
@@ -210,8 +210,7 @@ def register_product():
 
 def edit_product(product_id):
     conn = get_db_connection()
-    conn.row_factory = psycopg2.extras.DictCursor
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if request.method == "POST":
         # 수정된 정보 받기
@@ -255,7 +254,7 @@ def edit_product(product_id):
     )
 def delete_product(product_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
     conn.commit()
     conn.close()
