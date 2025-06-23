@@ -1,5 +1,7 @@
 from flask import request, render_template
 from datetime import datetime, timedelta, date
+import psycopg2
+import psycopg2.extras
 from db import get_db_connection
 
 def view_movements():

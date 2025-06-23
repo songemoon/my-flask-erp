@@ -1,5 +1,7 @@
 from flask import request, render_template, redirect, url_for, session
 from datetime import datetime, timedelta, date
+import psycopg2
+import psycopg2.extras
 from db import get_db_connection
 
 def new_order():

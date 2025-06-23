@@ -4,6 +4,8 @@ from collections import defaultdict
 import io
 import csv
 from dateutil.relativedelta import relativedelta
+import psycopg2
+import psycopg2.extras
 from db import get_db_connection  # PostgreSQL 연결 함수
 
 def upload_sales_volume():
