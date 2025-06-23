@@ -155,8 +155,8 @@
         <div class="user-info">
                 {% if session.user %}
                     <span>{{ session.user.name }}님</span>
-                    <a href="{{ url_for('change_password_route') }}" style="margin-left:12px; font-size:0.9rem; color:#ffd32a;">비밀번호 변경</a>
-                    <a href="{{ url_for('logout_route') }}" style="margin-left:16px;">로그아웃</a>
+                    <a href="{{ url_for('change_password_route') }}" style="margin-left:12px; font-size:0.9rem; color:#808080;">비밀번호 변경</a>
+                    <a href="{{ url_for('logout_route') }}" style="margin-left:16px; color:#B22222;">로그아웃</a>
                 {% else %}
                     <a href="{{ url_for('login') }}">로그인</a>
                 {% endif %}
