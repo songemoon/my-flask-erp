@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>창고 이동</title>
+</head>
+<body>
+    <h2>창고 이동 등록</h2>
+
+    <form method="post">
+        <!-- 제품 식별자 입력 -->
+        <label>SKU 또는 바코드:</label><br>
+        <input type="text" id="identifier_input" name="identifier"><br><br>
+
+        <!-- 검색된 제품 목록 -->
+        <label>제품 선택:</label><br>
+        <select id="product_select" required>
+            <option value="">검색 후 선택</option>
+        </select><br><br>
+
+        <!-- 제품 정보 자동 표시 -->
+        <label>제품명:</label><br>
+        <input type="text" id="product_name" readonly><br><br>
+
+        <label>영문명:</label><br>
+        <input type="text" id="product_name_en" readonly><br><br>
+
+        <!-- 최종 선택된 SKU 저장 -->
+        <input type="hidden" name="final_sku" id="final_sku">
+
+        <!-- 입수량 -->
+        <label>박스당 입수량:</label><br>
+        <input type="number" name="unit_per_box" value="1" min="1"><br><br>
+
+        <!-- 박스 수량 -->
+        <label>박스 수량:</label><br>
+        <input type="number" name="box_qty" value="0"><br><br>
+
+        <!-- 낱개 수량 -->
+        <label>낱개 수량:</label><br>
+        <input type="number" name="piece_qty" value="0"><br><br>
+
+        <!-- 출발 창고 -->
+        <label>출발 창고:</label><br>
+        <select name="from_warehouse" required>
+            <option value="신창고">신창고</option>
+            <option value="매장창고">매장창고</option>
+            <option value="기타">기타</option>
+        </select><br><br>
+
+        <!-- 도착 창고 -->
+        <label>도착 창고:</label><br>
+        <select name="to_warehouse" required>
+            <option value="신창고">신창고</option>
+            <option value="매장창고">매장창고</option>
+            <option value="기타">기타</option>
+        </select><br><br>
+
+        <!-- 유통기한 -->
+        <label>유통기한 (선택):</label><br>
+        <input type="date" name="expiration_date"><br><br>
+
+        <button type="submit">이동 등록</button>
+    </form>
+
+    <!-- ✅ 제품 검색 및 선택 처리 스크립트 -->
+    <script>
+        document.getElementById("identifier_input").addEventListener("input", function () {
+            const identifier = this.value.trim();
+            if (!identifier) return;
+
+            fetch(`/api/product_info?identifier=${encodeURIComponent(identifier)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById("product_select");
+                    select.innerHTML = "<option value=''>검색 후 선택</option>";
+                    data.results.forEach(p => {
+                        const option = document.createElement("option");
+                        option.value = JSON.stringify(p);
+                        option.textContent = `[${p.sku}] ${p.name} (${p.english_name})`;
+                        select.appendChild(option);
+                    });
+
+                    document.getElementById("product_name").value = "";
+                    document.getElementById("product_name_en").value = "";
+                    document.getElementById("final_sku").value = "";
+                })
+                .catch(err => {
+                    alert("제품 검색 오류 발생");
+                    console.error(err);
+                });
+        });
+
+        document.getElementById("product_select").addEventListener("change", function () {
+            if (!this.value) return;
+            const selected = JSON.parse(this.value);
+            document.getElementById("product_name").value = selected.name;
+            document.getElementById("product_name_en").value = selected.english_name;
+            document.getElementById("final_sku").value = selected.sku;
+        });
+    </script>
+</body>
+</html>

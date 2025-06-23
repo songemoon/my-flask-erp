@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}일정 등록{% endblock %}
+
+{% block content %}
+<style>
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        font-size: 0.95rem;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 24px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"],
+    input[type="password"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+    }
+
+    button {
+        background-color: var(--primary);
+        color: #fff;
+        font-weight: bold;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .form-footer {
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>
+
+<h2>📋 일정 등록</h2>
+
+<form method="POST">
+    <div>
+        <label>제목</label>
+        <input type="text" name="title" required>
+    </div>
+
+    <div>
+        <label>시작 시각</label>
+        <input type="datetime-local" name="start" required>
+    </div>
+
+    <div>
+        <label>종료 시각</label>
+        <input type="datetime-local" name="end">
+    </div>
+
+    <div>
+        <label>유형</label>
+        <select name="type">
+            <option value="일정">일정</option>
+            <option value="휴가">휴가</option>
+            <option value="미팅">미팅</option>
+        </select>
+    </div>
+
+    {% if session.user %}
+        <input type="hidden" name="employee_name" value="{{ session.user.name }}">
+    {% else %}
+        <div>
+            <label>담당자명</label>
+            <input type="text" name="employee_name" required>
+        </div>
+
+        <div>
+            <label>비밀번호 (수정/삭제 시 필요)</label>
+            <input type="password" name="password" required>
+        </div>
+    {% endif %}
+
+    <div class="form-footer">
+        <button type="submit">등록</button>
+    </div>
+</form>
+{% endblock %}

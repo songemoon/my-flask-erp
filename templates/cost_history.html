@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}원가 이력 조회 | ERP 시스템{% endblock %}
+
+{% block content %}
+<style>
+    .search-form {
+        margin: 16px 0 20px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .search-form input[type="text"] {
+        width: 280px;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+    }
+
+    .search-form button {
+        padding: 8px 14px;
+        background-color: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .search-form button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .sku-group {
+        margin-bottom: 30px;
+    }
+
+    .sku-header {
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+    }
+
+    .sku-header strong {
+        font-weight: bold;
+    }
+
+    .sku-header span {
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    .cost-table {
+        width: 100%;
+        border-collapse: separate;      /* 셀 간 경계 강조 */
+        border-spacing: 0;
+        font-size: 0.85rem;
+        background-color: #ffffff;      /* 흰색 배경 */
+        border: 1px solid #bbb;         /* 외곽선 색 강조 */
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .cost-table th,
+    .cost-table td {
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        text-align: center;
+        background-color: #fff;
+    }
+
+    .cost-table th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 2px solid #aaa;
+    }
+
+    .cost-table tr:hover {
+        background-color: #f4f6f9;
+    }
+
+    .cost-table .final-cost {
+        font-weight: bold;
+        color: #2f3542;
+    }
+
+    .cost-table a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .cost-table a:hover {
+        text-decoration: underline;
+    }
+
+    .message {
+        font-size: 0.9rem;
+        margin-top: 20px;
+    }
+
+    .message.error {
+        color: var(--danger-text);
+    }
+
+    .message.hint {
+        color: #888;
+    }
+</style>
+
+<h2>💰 원가 이력 조회</h2>
+
+<form method="GET" class="search-form">
+    <input type="text" name="q" placeholder="제품명 / SKU / 바코드 / 발주번호" value="{{ query }}">
+    <button type="submit">검색</button>
+</form>
+
+{% if query %}
+    {% if grouped %}
+        {% for sku, records in grouped.items() %}
+            <div class="sku-group">
+                <div class="sku-header">
+                    <strong>📦 SKU:</strong> {{ sku }}<br>
+                    <span>{{ records[0].product_name or 'N/A' }} / {{ records[0].barcode or 'N/A' }}</span>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="cost-table">
+                        <thead>
+                            <tr>
+                                <th>발주번호</th>
+                                <th>수량</th>
+                                <th>단가(€)</th>
+                                <th>공통비용(€)</th>
+                                <th>최종 원가(€)</th>
+                                <th>등록일</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in records %}
+                            <tr>
+                                <td>{{ row.order_code }}</td>
+                                <td>{{ row.quantity }}</td>
+                                <td>{{ row.unit_price }}</td>
+                                <td>{{ row.common_unit_cost }}</td>
+                                <td class="final-cost">{{ row.final_cost }}</td>
+                                <td>{{ row.timestamp[:10] }}</td>
+                                <td>
+                                    <a href="{{ url_for('register_cost', order_code=row.order_code) }}">🔁 수정</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="message error">❌ 검색 결과가 없습니다.</p>
+    {% endif %}
+{% else %}
+    <p class="message hint">🔎 제품명, SKU, 바코드, 발주번호 중 하나로 검색하세요.</p>
+{% endif %}
+{% endblock %}

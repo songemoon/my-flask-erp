@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}거래처 관리{% endblock %}
+
+{% block style %}
+<style>
+:root {
+    --main-bg: #f9fafc;
+    --card-bg: #ffffff;
+    --primary: #1e90ff;
+    --primary-hover: #0f75d3;
+    --border-color: #dcdde1;
+    --text-color: #2f3542;
+}
+/* 레이아웃 */
+.container {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    margin: 20px;
+}
+.panel {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 24px;
+    font-size: 0.95rem;
+}
+/* form panel */
+.form-panel {
+    flex: 1 1 300px;
+}
+/* table panel */
+.list-panel {
+    flex: 2 1 600px;
+    overflow-x: auto;
+}
+h1, h2 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 20px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+label {
+    font-weight: 600;
+}
+input[type="text"],
+select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    width: 100%;
+}
+button {
+    align-self: flex-start;
+    padding: 10px 20px;
+    background-color: var(--primary);
+    color: #fff;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+button:hover {
+    background-color: var(--primary-hover);
+}
+.alert {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.alert-danger {
+    background-color: #fdecea;
+    color: #c0392b;
+    border: 1px solid #e74c3c;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+th, td {
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+thead {
+    background-color: #eef3f8;
+}
+tr:nth-child(even) {
+    background-color: var(--main-bg);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 등록 폼 -->
+    <div class="panel form-panel">
+        <h1>🧾 거래처 등록</h1>
+
+        {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label for="name">거래처명:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="country">국가:</label>
+            <select name="country" id="country" required>
+                <option value="">-- 선택 --</option>
+                {% for country_name in countries %}
+                <option value="{{ country_name }}">{{ country_name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">등록</button>
+        </form>
+    </div>
+
+    <!-- 목록 테이블 -->
+    <div class="panel list-panel">
+        <h2>📋 등록된 거래처 목록</h2>
+        <table id="supplierTable">
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>이름</th>
+                    <th>국가 코드</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td>{{ supplier.code }}</td>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.country_code }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" style="padding:20px; color:#666;">등록된 거래처가 없습니다.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.getElementById("supplierTable");
+    const headers = table.querySelectorAll("th");
+    let sortDirection = {};
+
+    headers.forEach((header, index) => {
+        header.addEventListener("click", () => {
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const asc = !sortDirection[index];
+
+            rows.sort((a, b) => {
+                const cellA = a.children[index].innerText.trim();
+                const cellB = b.children[index].innerText.trim();
+
+                const valA = isNaN(cellA) ? cellA : parseFloat(cellA);
+                const valB = isNaN(cellB) ? cellB : parseFloat(cellB);
+
+                return asc
+                    ? valA > valB ? 1 : valA < valB ? -1 : 0
+                    : valA < valB ? 1 : valA > valB ? -1 : 0;
+            });
+
+            const tbody = table.querySelector("tbody");
+            rows.forEach(row => tbody.appendChild(row));
+            sortDirection = {};
+            sortDirection[index] = asc;
+
+            headers.forEach(h => {
+                h.innerText = h.innerText.replace(/[\u25B2\u25BC]/g, '').trim();
+            });
+
+            const arrow = asc ? " ▲" : " ▼";
+            headers[index].innerText = headers[index].innerText + arrow;
+        });
+    });
+});
+</script>
+{% endblock %}

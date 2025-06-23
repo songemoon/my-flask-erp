@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}홈{% endblock %}
+
+{% block content %}
+<h1>환영합니다, {{ session['user']['name'] }}님</h1>
+<p>ERP 시스템에 로그인되었습니다.</p>
+{% endblock %}

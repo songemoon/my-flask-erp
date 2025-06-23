@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}발주서 리스트 | ERP 시스템{% endblock %}
+
+{% block content %}
+<style>
+    h2 {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 24px;
+    }
+
+    .search-form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 30px;
+    }
+
+    .search-form input[type="text"] {
+        width: 360px;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+    }
+
+    .search-form button {
+        padding: 8px 14px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .search-form button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;        /* 기존 collapse → separate */
+        border-spacing: 0;                /* 셀 간 간격 제거 */
+        font-size: 0.9rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+
+    th, td {
+        border: 1px solid #bbb;           /* 구분선 색 강화 */
+        padding: 10px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 2px solid #999;    /* 헤더 하단 구분 강조 */
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9fafc;
+    }
+
+    tr:hover {
+        background-color: #f1f3f5;
+    }
+
+
+    .action-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .view-btn {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    .view-btn:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .cost-btn {
+        background-color: #2c3e50;
+        color: white;
+    }
+
+    .cost-btn:hover {
+        background-color: #1a242f;
+    }
+
+    .no-result {
+        text-align: center;
+        color: #888;
+        font-size: 0.95rem;
+        margin-top: 20px;
+    }
+</style>
+
+<h2>🧾 발주서 리스트</h2>
+
+<form method="get" action="{{ url_for('list_orders') }}" class="search-form">
+    <input type="text" name="q" value="{{ query }}" placeholder="발주번호, 거래처명, SKU 등 검색">
+    <button type="submit">검색</button>
+</form>
+
+{% if orders %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>발주번호</th>
+                    <th>거래처 번호</th>
+                    <th>거래처명</th>
+                    <th>발주일</th>
+                    <th>담당자명</th>
+                    <th>상세보기</th>
+                    <th>원가등록</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.order_code }}</td>
+                    <td>{{ order.supplier_code }}</td>
+                    <td>{{ order.supplier_name }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td>{{ order.staff_name }}</td>
+                    <td>
+                        <a href="{{ url_for('view_order', order_code=order.order_code) }}">
+                            <button type="button" class="action-btn view-btn">보기</button>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('register_cost', order_code=order.order_code) }}">
+                            <button type="button" class="action-btn cost-btn">원가등록</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="no-result">검색 결과가 없습니다.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}ERP 시스템{% endblock %}</title>
+    {% block style %}{% endblock %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100% !important;
+            overflow: hidden !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            background-color: #edf1f7 !important;
+            color: #2f3542 !important;
+        }
+
+        header {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px !important;
+            background-color: #1e272e !important;
+            color: #f1f2f6 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0 30px !important;
+            z-index: 1000 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 40px;
+            margin-right: 12px;
+        }
+        .logo span {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .layout {
+            display: flex !important;
+            margin-top: 60px !important;
+            height: calc(100vh - 60px) !important;
+        }
+
+        nav {
+            width: 240px !important;
+            background-color: #2c3e50 !important;
+            color: #f1f2f6 !important;
+            padding: 25px 15px !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        nav h2 {
+            margin-top: 0 !important;
+            font-size: 1.4rem !important;
+            margin-bottom: 20px !important;
+            font-weight: 700 !important;
+            border-bottom: 2px solid #485460 !important;
+            padding-bottom: 8px !important;
+            color: #f1f2f6 !important;
+            text-align: left !important;
+        }
+
+        nav .menu-title {
+            font-weight: 600 !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 8px !important;
+            color: #d2dae2 !important;
+            text-align: left !important;
+        }
+
+        nav .submenu a {
+            display: block !important;
+            color: #dcdde1 !important;
+            text-decoration: none !important;
+            padding: 6px 10px !important;
+            border-radius: 4px !important;
+            margin-bottom: 4px !important;
+            font-size: 0.9rem !important;
+            transition: all 0.2s ease !important;
+        }
+
+        nav .submenu a:hover {
+            background-color: #2f3640 !important;
+            color: white !important;
+            transform: translateX(4px) !important;
+        }
+
+        nav a.active {
+            background-color: #ffffff !important;
+            color: rgb(0, 0, 0) !important;
+            font-weight: 700 !important;
+        }
+        nav .menu-section {
+            margin-bottom: 24px; /* 섹션 간 간격 추가 */
+        }
+
+        main {
+            flex-grow: 1 !important;
+            padding: 40px 50px !important;
+            background-color: #edf1f7 !important;
+            overflow-y: auto !important;
+        }
+
+        main::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        main::-webkit-scrollbar-thumb {
+            background-color: #aaa;
+            border-radius: 4px;
+        }
+
+        .page-wrapper > *:first-child {
+            margin-top: 0 !important;
+        }
+        button {
+            background-color: #1e90ff !important;
+            color: #fff;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0f75d3;
+        }
+
+    </style>
+
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://zemez.io/html/wp-content/uploads/sites/9/2017/10/logo.png" alt="ERP Logo">
+            <span>ERP 시스템</span>
+        </div>
+        <div class="user-info">
+                {% if session.user %}
+                    <span>{{ session.user.name }}님</span>
+                    <a href="{{ url_for('change_password_route') }}" style="margin-left:12px; font-size:0.9rem; color:#ffd32a;">비밀번호 변경</a>
+                    <a href="{{ url_for('logout_route') }}" style="margin-left:16px;">로그아웃</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">로그인</a>
+                {% endif %}
+            </div>
+        </header>
+
+
+    <div class="layout">
+        <nav>
+            <h2>메뉴</h2>
+
+            <div class="menu-section">
+                <div class="menu-title">📦 제품</div>
+                <div class="submenu">
+                    <a href="{{ url_for('manage_products') }}">제품 관리</a>
+                    <a href="{{ url_for('view_cost_history') }}">제품 원가</a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">🏬 창고</div>
+                <div class="submenu">
+                    <a href="{{ url_for('search_inventory') }}">재고 검색</a>
+                    <a href="{{ url_for('manage_inventory') }}">재고 이동</a>
+                    <a href="{{ url_for('view_movements_view') }}">이동 내역</a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">📝 발주</div>
+                <div class="submenu">
+                    <a href="{{ url_for('new_order') }}">신규 발주</a>
+                    <a href="{{ url_for('list_orders') }}">발주 목록</a>
+                    <a href="{{ url_for('manage_suppliers') }}">거래처 관리</a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">📊 판매</div>
+                <div class="submenu">
+                    <a href="{{ url_for('sales_overview') }}">판매 현황</a>
+                    <a href="{{ url_for('upload_sales_volume') }}">판매량 업로드</a>
+                    <a href="{{ url_for('upload_real_stock') }}">실재고 업로드</a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">📅 회사일정</div>
+                <div class="submenu">
+                    <a href="{{ url_for('schedule.view_calendar') }}">캘린더</a>
+                    <a href="{{ url_for('schedule.add_schedule') }}">일정 등록</a>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <div class="page-wrapper">
+                {% block content %}
+                <h1>ERP 시스템에 오신 것을 환영합니다</h1>
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

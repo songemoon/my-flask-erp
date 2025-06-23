@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}판매량 조회{% endblock %}
+
+{% block content %}
+<h2>📊 실판매량 조회</h2>
+
+<form method="get" style="margin-bottom: 20px;">
+    <input type="text" name="q" placeholder="바코드, SKU, 제품명 검색" value="{{ query }}" class="search-input">
+    <button type="submit">검색</button>
+</form>
+
+<div style="overflow-x: auto;">
+    <table id="sales-table" class="wide-table">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">SKU</th>
+                <th onclick="sortTable(1)">제품명</th>
+                <th onclick="sortTable(2)">바코드</th>
+                <th onclick="sortTable(3)">실제고</th>
+                <th onclick="sortTable(4)">유통기한</th>
+                <th onclick="sortTable(5)">입고예정</th>
+                <th onclick="sortTable(6)">평균 판매</th>
+                <th onclick="sortTable(7)">재고/평균</th>
+                {% for m in months %}
+                    <th onclick="sortTable({{ loop.index + 7 }})">{{ m }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            {% set ratio = (row.real_stock or 0) / (row.avg_sales or 1) %}
+            {% set highlight_class = 'low-row' if ratio <= 1 else 'high-row' if ratio >= 12 else '' %}
+            <tr class="{{ highlight_class }}">
+                <td>{{ row.sku }}</td>
+                <td class="product-name-cell">{{ row.product_name or '' }}</td>
+                <td>{{ row.barcode or '' }}</td>
+                <td>{{ row.real_stock or 0 }}</td>
+                <td>{{ row.expiry_text or '' }}</td>
+                <td>{{ row.incoming_qty or 0 }}</td>
+                <td><strong>{{ row.avg_sales or 0 }}</strong></td>
+                <td>{{ ratio|round(2) }}개월</td>
+                {% for m in months %}
+                    <td>{{ row[m] or 0 }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<style>
+    h2 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #2f3542;
+    }
+
+    .search-input {
+        padding: 8px 10px;
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        box-sizing: border-box;
+    }
+
+    button {
+        padding: 8px 16px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: #0f75d3;
+    }
+
+    .wide-table {
+        width: 100%;
+        min-width: 1200px;
+        table-layout: auto; 
+        border-collapse: collapse;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 0.9rem;
+        background-color: #ffffff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        margin-top: 20px;
+    }
+
+    .wide-table th,
+    .wide-table td {
+        border: 1px solid #dcdde1;
+        padding: 10px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .wide-table th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+        user-select: none;
+        cursor: pointer;
+    }
+
+    .product-name-cell {
+        text-align: left !important;
+        padding-left: 12px !important;
+        white-space: nowrap;
+    }
+
+    .wide-table tr:nth-child(even):not(.low-row):not(.high-row) {
+        background-color: #f9fafc;
+    }
+
+    .low-row {
+        background-color: #f8d7da !important;
+    }
+
+    .high-row {
+        background-color: #fff3cd !important;
+    }
+
+    th.sorted-asc::after {
+        content: " ▲";
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    th.sorted-desc::after {
+        content: " ▼";
+        font-size: 0.8rem;
+        color: #888;
+    }
+</style>
+
+<script>
+    let sortDirection = {};
+
+    function sortTable(colIndex) {
+        const table = document.getElementById("sales-table");
+        const tbody = table.tBodies[0];
+        const rows = Array.from(tbody.rows);
+        const header = table.tHead.rows[0].cells[colIndex];
+
+        sortDirection[colIndex] = !sortDirection[colIndex];
+
+        for (let cell of table.tHead.rows[0].cells) {
+            cell.classList.remove("sorted-asc", "sorted-desc");
+        }
+
+        header.classList.add(sortDirection[colIndex] ? "sorted-asc" : "sorted-desc");
+
+        rows.sort((a, b) => {
+            let aText = a.cells[colIndex].innerText.trim().replace(" 개월", "");
+            let bText = b.cells[colIndex].innerText.trim().replace(" 개월", "");
+
+            let aNum = parseFloat(aText.replace(",", ""));
+            let bNum = parseFloat(bText.replace(",", ""));
+            const isNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+            if (isNumeric) {
+                return sortDirection[colIndex] ? aNum - bNum : bNum - aNum;
+            } else {
+                return sortDirection[colIndex]
+                    ? aText.localeCompare(bText)
+                    : bText.localeCompare(aText);
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+{% endblock %}

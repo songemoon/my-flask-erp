@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}발주서 상세 조회 - {{ order_code }}{% endblock %}
+
+{% block content %}
+<style>
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+        color: #2f3542;
+    }
+
+    .info-text {
+        margin-top: 10px;
+        font-size: 1rem;
+        color: #555;
+    }
+
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 25px;
+        font-size: 0.95rem;
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    .order-table th, .order-table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    .order-table th {
+        background-color: #f1f2f6;
+        font-weight: bold;
+    }
+
+    .order-table td:first-child,
+    .order-table td:nth-child(2) {
+        text-align: left;
+    }
+
+    .button-group {
+        margin-top: 30px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .button-group button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: bold;
+    }
+
+    .btn-edit {
+        background-color: #ffa502;
+        color: white;
+    }
+
+    .btn-print {
+        background-color: #1e90ff;
+        color: white;
+    }
+
+    .btn-receive {
+        background-color: #2ed573;
+        color: white;
+    }
+
+    .btn-new {
+        background-color: white;
+        border: 1px solid #ccc;
+        color: #2c3e50;
+    }
+    .btn-delete {
+        background-color: #ff4757;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background-color: #e84148;
+    }
+
+    .btn-edit:hover { background-color: #e0a800; }
+    .btn-print:hover { background-color: #0f75d3; }
+    .btn-receive:hover { background-color: #28c76f; }
+    .btn-new:hover { background-color: #f1f2f6; }
+</style>
+
+<h2>📄 발주서 {{ order_code }} 상세</h2>
+
+<p class="info-text">
+    <strong>담당자:</strong> {{ user.name }}
+</p>
+
+<table class="order-table">
+    <thead>
+        <tr>
+            <th>제품 SKU</th>
+            <th>제품명</th>
+            <th>수량</th>
+            <th>거래처</th>
+            <th>발주일</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.product_sku }}</td>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.supplier_name }}</td>
+            <td>{{ item.order_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="button-group">
+    <a href="{{ url_for('edit_order', order_code=order_code) | replace('%2F', '/') }}">
+        <button type="button" class="btn-edit">✏️ 수정하기</button>
+    </a>
+
+    <a href="{{ url_for('print_order', order_code=order_code) }}" target="_blank">
+        <button type="button" class="btn-print">📄 인쇄하기</button>
+    </a>
+
+    <a href="{{ url_for('receive_order', order_code=order_code) }}">
+        <button type="button" class="btn-receive">📥 입고 등록</button>
+    </a>
+
+    <a href="{{ url_for('new_order') }}">
+        <button type="button" class="btn-new">➕ 새 발주 등록</button>
+    </a>
+    {% if user.name == items[0]["staff_name"] %}
+    <form action="{{ url_for('delete_order_route', order_code=order_code) }}" method="post" style="display:inline;"
+        onsubmit="return confirm('정말로 삭제하시겠습니까? 삭제된 데이터는 복구되지 않습니다.');">
+        <button type="submit" class="btn-delete">🗑️ 발주서 삭제</button>
+    </form>
+    {% endif %}
+
+</form>
+</div>
+{% endblock %}

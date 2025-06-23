@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}실재고 업로드{% endblock %}
+
+{% block content %}
+<style>
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        color: #2f3542;
+    }
+
+    form {
+        margin-top: 30px;
+        max-width: 500px;
+        background-color: #f1f2f6;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #2f3542;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #1e90ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #0f75d3;
+    }
+
+    p {
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .message-box {
+        margin-top: 25px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        background-color: #f1f2f6;
+        color: #2c3e50;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+</style>
+
+<h2>📦 실재고 CSV 업로드</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    <div style="margin-bottom: 20px;">
+        <label for="file">CSV 파일 선택</label>
+        <input type="file" id="file" name="file" accept=".csv" required>
+    </div>
+
+    <button type="submit">📤 업로드</button>
+</form>
+
+<p>※ CSV 파일은 <strong>"SKU, 제품명, 재고, 유통기한"</strong> 순서의 헤더가 있어야 합니다.</p>
+
+{% if message %}
+  <div class="message-box">
+    {{ message }}
+  </div>
+{% endif %}
+{% endblock %}

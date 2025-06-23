@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}원가 등록 - {{ order_code }}{% endblock %}
+
+{% block content %}
+<h2>💰 발주번호: {{ order_code }} - 원가 등록</h2>
+
+<form method="POST" style="margin-top: 30px;">
+    <section style="margin-bottom: 40px; max-width: 960px;">
+        <h3 style="margin-bottom: 16px;">① 품목별 단가 입력</h3>
+        <div style="overflow-x: auto;">
+            <table class="cost-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>SKU</th>
+                        <th>품명</th>
+                        <th>수량</th>
+                        <th>단가 입력 (€)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><input type="text" name="sku_{{ loop.index0 }}" value="{{ item.product_sku }}" readonly class="input-cell small"></td>
+                        <td>{{ item.product_name }}</td>
+                        <td><input type="number" name="qty_{{ loop.index0 }}" value="{{ item.quantity }}" readonly class="input-cell small"></td>
+                        <td>
+                            <input type="number" step="0.01" name="unit_price_{{ loop.index0 }}"
+                                   value="{{ cost_items.get(item.product_sku, {}).get('unit_price', '') }}"
+                                   required class="input-cell small">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <input type="hidden" name="total_items" value="{{ items|length }}">
+    </section>
+
+    <section style="margin-bottom: 40px; max-width: 960px;">
+        <h3 style="margin-bottom: 16px;">② 공통 비용 입력</h3>
+        <div style="overflow-x: auto;">
+            <table class="cost-table" id="expense-table">
+                <thead>
+                    <tr>
+                        <th>내용</th>
+                        <th>비용 (€)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if expense_items and expense_items|length > 0 %}
+                        {% for exp in expense_items %}
+                        <tr>
+                            <td><input type="text" name="expense_name" value="{{ exp['expense_name'] }}" class="input-cell"></td>
+                            <td><input type="number" step="0.01" name="expense_amount" value="{{ exp['expense_amount'] }}" oninput="updateTotalExpense()" class="input-cell small"></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for i in range(2) %}
+                        <tr>
+                            <td><input type="text" name="expense_name" class="input-cell"></td>
+                            <td><input type="number" step="0.01" name="expense_amount" oninput="updateTotalExpense()" class="input-cell small"></td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <button type="button" onclick="addExpenseRow()" style="margin-top: 10px;">➕ 행 추가</button>
+
+        <div style="margin-top: 16px;">
+            <strong>총 공통 비용: <span id="total_expense">0.00</span> €</strong>
+            <input type="hidden" id="total_amount_hidden" name="total_expense" value="0.00">
+        </div>
+    </section>
+
+    <button type="submit" style="background-color: #1e90ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold;">
+        원가 등록
+    </button>
+</form>
+{% if message %}
+<div style="margin-top: 20px; padding: 12px; background-color: #e7f6e7; border: 1px solid #b2d8b2; color: #2e7d32; border-radius: 6px; text-align: center; font-size: 0.95rem;">
+    {{ message }}
+</div>
+{% endif %}
+<style>
+    h2, h3 {
+        margin-top: 30px;
+        margin-bottom: 16px;
+        color: #2f3542;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    form {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border: 1px solid #dcdde1;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        font-size: 0.95rem;
+    }
+
+    .cost-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #ffffff;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .cost-table th,
+    .cost-table td {
+        border: 1px solid #dcdde1;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .cost-table th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .input-cell {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .input-cell.small {
+        max-width: 100px;
+    }
+
+    button[type="submit"],
+    button[type="button"] {
+        margin-top: 20px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    button:hover {
+        background-color: #0f75d3;
+    }
+
+    #total_expense {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #1e90ff;
+        margin-left: 4px;
+    }
+</style>
+
+
+<script>
+    function addExpenseRow() {
+        const table = document.getElementById("expense-table").getElementsByTagName("tbody")[0];
+        const row = table.insertRow(-1);
+        row.innerHTML = `
+            <td><input type="text" name="expense_name" class="input-cell"></td>
+            <td><input type="number" step="0.01" name="expense_amount" oninput="updateTotalExpense()" class="input-cell small"></td>
+        `;
+    }
+
+    function updateTotalExpense() {
+        const amounts = document.getElementsByName("expense_amount");
+        let total = 0;
+        for (let i = 0; i < amounts.length; i++) {
+            const val = parseFloat(amounts[i].value);
+            if (!isNaN(val)) {
+                total += val;
+            }
+        }
+        document.getElementById("total_expense").textContent = total.toFixed(2);
+        document.getElementById("total_amount_hidden").value = total.toFixed(2);
+    }
+
+    window.onload = updateTotalExpense;
+</script>
+
+{% endblock %}

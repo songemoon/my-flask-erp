@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>발주서 출력 ({{ order_code }})</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 40px;
+            color: #000;
+            background-color: #fff;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .company-info {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .po-info {
+            text-align: right;
+        }
+
+        .po-info h1 {
+            font-size: 1.8rem;
+            color: #000;
+            margin: 0;
+        }
+
+        .po-info div {
+            margin-top: 6px;
+            font-size: 0.9rem;
+        }
+
+        .top-section {
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        .shipto {
+            font-size: 0.95rem;
+        }
+
+        .shipto-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+        }
+
+        th {
+            background-color: #eee;
+            text-align: center;
+        }
+
+        td:nth-child(1), th:nth-child(1) {
+            width: 20%;
+            text-align: left;
+        }
+
+        td:nth-child(2), th:nth-child(2) {
+            width: 65%;
+            text-align: left;
+        }
+
+        td:nth-child(3), th:nth-child(3) {
+            width: 15%;
+            text-align: center;
+        }
+
+        .comments {
+            margin-top: 25px;
+            font-size: 0.9rem;
+        }
+
+        .comments label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .comments-box {
+            border: 1px solid #000;
+            height: 80px;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            text-align: center;
+            color: #333;
+        }
+
+        @media print {
+            #printBtn {
+                display: none;
+            }
+        }
+
+        .print-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #printBtn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #printBtn:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <!-- 상단: 회사정보 / PURCHASE ORDER -->
+    <div class="header">
+        <div class="company-info">
+            <strong>[Your Company Name]</strong><br>
+            [Your Street Address]<br>
+            [City, ST ZIP Code]<br>
+            Phone: [000-000-0000]<br>
+            Email: [email@example.com]
+        </div>
+        <div class="po-info">
+            <h1>PURCHASE ORDER</h1>
+            <div><strong>DATE:</strong> {{ items[0].order_date }}</div>
+            <div><strong>PO#:</strong> {{ order_code }}</div>
+            <div><strong>Prepared by:</strong> {{ user.english_name }}</div>
+            <div><strong>Supplier:</strong> {{ items[0].supplier_name }}</div>
+        </div>
+    </div>
+
+    <!-- SHIP TO 왼쪽 정렬 -->
+    <div class="top-section">
+        <div class="shipto">
+            <div class="shipto-title">SHIP TO</div>
+            [Your Company Name]<br>
+            (Your shipping address)
+        </div>
+    </div>
+
+    <!-- 제품 테이블 -->
+    <table>
+        <thead>
+            <tr>
+                <th>Product SKU</th>
+                <th>Description</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product_sku }}</td>
+                <td>{{ item.english_name }}</td>
+                <td>{{ item.quantity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 비고 -->
+    <div class="comments">
+        <label>Comments or Special Instructions</label>
+        <div class="comments-box">
+            {{ items[0].inquiry or '-' }}
+        </div>
+    </div>
+
+    <!-- 인쇄 버튼 -->
+    <div class="print-button">
+        <button id="printBtn" onclick="window.print()">🖨️ Print</button>
+    </div>
+
+    <!-- 안내 문구 -->
+    <div class="footer-note">
+        If you have any questions about this purchase order, please contact<br>
+        [Name, Phone#, Email]
+    </div>
+</body>
+</html>

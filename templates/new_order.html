@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}발주 등록{% endblock %}
+
+{% block content %}
+<style>
+    h1 {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #2f3542;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    form {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+        background-color: #ffffff;
+        border: 1px solid #dcdde1;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        font-size: 0.95rem;
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        box-sizing: border-box;
+        background-color: #fff;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    .form-section {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    #searchResults {
+        border: 1px solid #ccc;
+        max-height: 160px;
+        overflow-y: auto;
+        background: white;
+        position: absolute;
+        width: 100%;
+        z-index: 100;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .search-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 0.92rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .search-item:hover {
+        background-color: #e0f7fa;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        background-color: #ffffff;
+        border: 1px solid #dcdde1;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 12px 14px;
+        text-align: center;
+        border: 1px solid #dcdde1;
+    }
+
+    th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9fafc;
+    }
+
+    .button-group {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: #0f75d3;
+    }
+
+    .button-group a button {
+        margin-left: 10px;
+    }
+
+    .delete-row-btn {
+        background-color: #e74c3c;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+    }
+
+    .delete-row-btn:hover {
+        background-color: #c0392b;
+    }
+</style>
+
+
+<h1>🗒️ 발주 등록</h1>
+
+<form method="post" id="orderForm" autocomplete="off">
+    <div class="form-section">
+        <label>담당자명</label>
+        <input type="text" value="{{ user.name }}" readonly>
+    </div>
+
+    <div class="form-section">
+        <label>거래처</label>
+        <select name="supplier_id" required>
+            <option value="">-- 선택 --</option>
+            {% for s in suppliers %}
+                <option value="{{ s['id'] }}">{{ s['name'] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-section" style="position: relative;">
+        <label>제품 검색 (SKU, 바코드, 제품명)</label>
+        <input type="text" id="productSearchInput">
+        <div id="searchResults"></div>
+    </div>
+
+    <table id="orderTable">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>제품명</th>
+                <th>수량</th>
+                <th>삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows added dynamically -->
+        </tbody>
+    </table>
+
+    <div class="form-section">
+        <label>요청사항 (선택)</label>
+        <textarea name="inquiry" rows="4"></textarea>
+    </div>
+
+    <div class="button-group">
+        <button type="submit"> 발주 등록 </button>
+        {% if order_code %}
+        <a href="{{ url_for('print_order', order_code=order_code) }}" target="_blank">
+            <button type="button"> 발주서 출보 </button>
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+<script>
+    const searchInput = document.getElementById("productSearchInput");
+    const resultsDiv = document.getElementById("searchResults");
+    const orderTableBody = document.querySelector("#orderTable tbody");
+
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            resultsDiv.innerHTML = "";
+            return;
+        }
+        fetch(`/api/product_search?query=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="search-item">검색 결과가 없습니다.</div>';
+                    return;
+                }
+                resultsDiv.innerHTML = data.results.map(p =>
+                    `<div class="search-item" data-sku="${p.sku}" data-name="${p.name}">${p.sku} - ${p.name}</div>`
+                ).join("");
+                document.querySelectorAll(".search-item").forEach(item => {
+                    item.onclick = () => {
+                        addProductRow(item.dataset.sku, item.dataset.name);
+                        resultsDiv.innerHTML = "";
+                        searchInput.value = "";
+                    };
+                });
+            });
+    });
+
+    function addProductRow(sku, name) {
+        const rowCount = orderTableBody.querySelectorAll("tr").length;
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+            <td class="item-no">${rowCount + 1}</td>
+            <td><input type="text" name="product_name_${rowCount}" value="${name}" readonly required></td>
+            <td><input type="number" name="quantity_${rowCount}" min="1" value="1" required></td>
+            <td><button type="button" class="delete-row-btn">삭제</button></td>
+            <input type="hidden" name="product_sku_${rowCount}" value="${sku}">
+        `;
+        orderTableBody.appendChild(newRow);
+        newRow.querySelector(".delete-row-btn").addEventListener("click", () => {
+            newRow.remove();
+            updateRowNumbers();
+        });
+        updateRowNumbers();
+    }
+
+    function updateRowNumbers() {
+        const rows = orderTableBody.querySelectorAll("tr");
+        rows.forEach((row, index) => {
+            row.querySelector(".item-no").textContent = index + 1;
+            row.querySelector("input[name^='product_name']").name = `product_name_${index}`;
+            row.querySelector("input[name^='quantity']").name = `quantity_${index}`;
+            row.querySelector("input[type='hidden']").name = `product_sku_${index}`;
+        });
+    }
+</script>
+{% endblock %}

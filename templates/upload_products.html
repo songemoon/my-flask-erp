@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}제품 대량 업로드{% endblock %}
+
+{% block content %}
+<h2>📥 제품 대량 등록 (CSV 업로드)</h2>
+
+<form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_products') }}" style="margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <input type="file" name="csv_file" accept=".csv" required 
+               style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%; max-width: 400px;">
+    </div>
+    <button type="submit" 
+            style="padding: 10px 20px; background-color: #1e90ff; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer;">
+        CSV 업로드
+    </button>
+</form>
+
+<p style="margin-top: 20px; font-size: 0.9rem; color: #555;">
+    📋 <strong>CSV 헤더 예시:</strong> 제품명, 영문명, 대분류, 소분류, 바코드
+</p>
+{% endblock %}

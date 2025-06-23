@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}제품 수정 | ERP 시스템{% endblock %}
+
+{% block content %}
+<style>
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        font-size: 0.95rem;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 24px;
+        color: var(--text-color);
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+        margin-bottom: 16px;
+    }
+
+    .radio-group {
+        padding: 6px 0 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .radio-group label {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    button[type="submit"] {
+        background-color: var(--primary);
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+        background-color: var(--primary-hover);
+    }
+</style>
+
+<h2>제품 수정</h2>
+
+<form method="post">
+    <!-- 제품명 -->
+    <div>
+        <label>제품명</label>
+        <input type="text" name="name" value="{{ product[2] }}" required>
+    </div>
+
+    <!-- 영문명 -->
+    <div>
+        <label>영문명</label>
+        <input type="text" name="english_name" value="{{ product[3] }}" required>
+    </div>
+
+    <!-- 카테고리 대분류 -->
+    <div>
+        <label>카테고리 대분류</label>
+        <select name="category_main" id="category_main" required onchange="updateSubcategories()">
+            {% for main in categories %}
+                <option value="{{ main }}" {% if main == product[4] %}selected{% endif %}>{{ main }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- 카테고리 소분류 -->
+    <div>
+        <label>카테고리 소분류</label>
+        <select name="category_sub" id="category_sub" required></select>
+    </div>
+
+    <!-- Suffix -->
+    <div>
+        <label>카테고리 Suffix</label>
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="category_suffix" value="" {% if not product[6] %}checked{% endif %}>
+                없음
+            </label>
+            {% for suffix in category_suffix %}
+                <label>
+                    <input type="radio" name="category_suffix" value="{{ suffix }}" {% if suffix == product[6] %}checked{% endif %}>
+                    {{ suffix }}
+                </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 바코드 -->
+    <div>
+        <label>바코드</label>
+        <input type="text" name="barcode" value="{{ product[7] }}">
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <button type="submit">수정 완료</button>
+    </div>
+</form>
+
+<script>
+    const categoryData = {{ categories|tojson }};
+    const subSelect = document.getElementById("category_sub");
+
+    function updateSubcategories() {
+        const main = document.getElementById("category_main").value;
+        const subItems = categoryData[main]?.sub || {};
+        subSelect.innerHTML = "";
+
+        for (const subName in subItems) {
+            const option = document.createElement("option");
+            option.value = subName;
+            option.text = subName;
+            if (subName === "{{ product[5] }}") {
+                option.selected = true;
+            }
+            subSelect.appendChild(option);
+        }
+    }
+
+    window.onload = updateSubcategories;
+</script>
+{% endblock %}

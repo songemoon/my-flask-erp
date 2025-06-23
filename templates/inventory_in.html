@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>입고 등록</title>
+</head>
+<body>
+    <h2>입고 등록</h2>
+
+    <form method="post">
+        <label>SKU 또는 바코드 입력:</label><br>
+        <input type="text" id="identifier_input" name="identifier"><br><br>
+
+        <label>검색 결과:</label><br>
+        <select id="product_select">
+            <option value="">검색 후 선택</option><br><br>
+        </select><br><br>
+
+        <label>제품명:</label><br>
+        <input type="text" id="product_name" readonly><br><br>
+
+        <label>영문명:</label><br>
+        <input type="text" id="english_name" readonly><br><br>
+
+        <!-- 입수량 -->
+        <label>박스당 입수량 (필수):</label><br>
+        <input type="number" name="unit_per_box" value="1" min="1" required><br><br>
+
+        <!-- 박스수량 -->
+        <label>박스 수량:</label><br>
+        <input type="number" name="box_qty" value="0"><br><br>
+
+        <!-- 낱개수량 -->
+        <label>낱개 수량:</label><br>
+        <input type="number" name="piece_qty" value="0"><br><br>
+
+        <!-- 창고 선택 -->
+        <label>창고 위치:</label><br>
+        <select name="warehouse" required>
+            <option value="신창고">신창고</option>
+            <option value="매장창고">매장창고</option>
+            <option value="기타">기타</option>
+        </select><br><br>
+
+        <!-- 선반 위치 -->
+        <label>선반 위치 (선택):</label><br>
+        <input type="text" name="shelf_location"><br><br>
+
+        <!-- 입고 발주번호 -->
+        <label>입고 발주번호 (선택):</label><br>
+        <input type="text" name="order_number"><br><br>
+
+        <!-- 유통기한 -->
+        <label>유통기한 (선택):</label><br>
+        <input type="date" name="expiration_date"><br><br>
+
+        <button type="submit">입고 등록</button>
+    </form>
+
+    <!-- 🔽 제품명 자동 표시 스크립트 -->
+    <script>
+    document.getElementById("identifier_input").addEventListener("blur", function () {
+        const identifier = this.value.trim();
+        if (!identifier) return;
+
+        fetch(`/api/product_info?identifier=${encodeURIComponent(identifier)}`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById("product_select");
+                select.innerHTML = '<option value="">검색 후 선택</option>';  // 초기화
+
+                if (data.results.length === 0) {
+                    alert("일치하는 제품이 없습니다.");
+                    return;
+                }
+
+                // 결과를 select에 추가
+                data.results.forEach(product => {
+                    const option = document.createElement("option");
+                    option.value = JSON.stringify(product);  // 전체 객체 저장
+                    option.text = `${product.sku} - ${product.name} (${product.english_name})`;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error("검색 오류:", error);
+            });
+    });
+
+    document.getElementById("product_select").addEventListener("change", function () {
+        const selected = this.value;
+        if (!selected) return;
+
+        const product = JSON.parse(selected);
+        document.getElementById("product_name").value = product.name;
+        document.getElementById("english_name").value = product.english_name;
+    });
+    </script>
+
+</body>
+</html>

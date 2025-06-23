@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}✏️ 일정 수정{% endblock %}
+
+{% block content %}
+<style>
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        font-size: 0.95rem;
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 24px;
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"],
+    input[type="password"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        background-color: #fff;
+    }
+
+    .button-group {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .submit-btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        background-color: #ffa502;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-right: 10px;
+    }
+
+    .submit-btn:hover {
+        background-color: #e08900;
+    }
+
+    .delete-btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .delete-btn:hover {
+        background-color: #c0392b;
+    }
+</style>
+
+<h2>✏️ 일정 수정</h2>
+
+<!-- 수정 폼 -->
+<form method="POST">
+    <div>
+        <label>제목</label>
+        <input type="text" name="title" value="{{ schedule.title }}" required>
+    </div>
+
+    <div>
+        <label>시작 시각</label>
+        <input type="datetime-local" name="start" value="{{ schedule.start }}" required>
+    </div>
+
+    <div>
+        <label>종료 시각</label>
+        <input type="datetime-local" name="end" value="{{ schedule.end }}">
+    </div>
+
+    <div>
+        <label>유형</label>
+        <select name="type">
+            <option value="일정" {% if schedule.type == '일정' %}selected{% endif %}>일정</option>
+            <option value="휴가" {% if schedule.type == '휴가' %}selected{% endif %}>휴가</option>
+            <option value="미팅" {% if schedule.type == '미팅' %}selected{% endif %}>미팅</option>
+        </select>
+    </div>
+
+    {% if not session.user or not schedule.employee_name %}
+    <div>
+        <label>비밀번호 (등록 시 사용한 값)</label>
+        <input type="password" name="password" required>
+    </div>
+    {% endif %}
+
+    <div class="button-group">
+        <button type="submit" class="submit-btn">수정 완료</button>
+    </div>
+</form>
+
+<!-- 삭제 폼 -->
+<form method="POST" action="{{ url_for('schedule.delete_schedule', schedule_id=schedule['id']) }}" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+    {% if not session.user or not schedule.employee_name %}
+    <div>
+        <label>비밀번호 (등록 시 사용한 값)</label>
+        <input type="password" name="password" required>
+    </div>
+    {% endif %}
+    <div class="button-group">
+        <button type="submit" class="delete-btn">삭제</button>
+    </div>
+</form>
+{% endblock %}

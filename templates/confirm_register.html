@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>중복 바코드 확인</title>
+</head>
+<body>
+    <h2>⚠️ 동일한 바코드를 가진 제품이 이미 존재합니다:</h2>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>제품명</th>
+            <th>SKU</th>
+            <th>영문명</th>
+            <th>카테고리</th>
+        </tr>
+        {% for p in existing %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[2] }}</td>
+            <td>{{ p[1] }}</td>
+            <td>{{ p[3] }}</td>
+            <td>{{ p[4] }} > {{ p[5] }}{% if p[6] %} > {{ p[6] }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>그래도 등록하시겠습니까?</h3>
+    <form method="post">
+        <!-- 기존 입력값 다시 넘김 -->
+        <input type="hidden" name="name" value="{{ name }}">
+        <input type="hidden" name="english_name" value="{{ english_name }}">
+        <input type="hidden" name="category_main" value="{{ category_main }}">
+        <input type="hidden" name="category_sub" value="{{ category_sub }}">
+        <input type="hidden" name="category_suffix" value="{{ category_suffix }}">
+        <input type="hidden" name="barcode" value="{{ barcode }}">
+        <input type="hidden" name="force_submit" value="1">
+        <button type="submit">네, 등록하겠습니다</button>
+        <a href="/register">아니요, 돌아갈래요</a>
+    </form>
+</body>
+</html>

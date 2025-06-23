@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}이동 내역 조회{% endblock %}
+
+{% block content %}
+<style>
+    h1 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 24px;
+        color: var(--text-color);
+    }
+
+    form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+        background-color: var(--card-bg);
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    label {
+        font-weight: 600;
+        margin-right: 6px;
+    }
+
+    input[type="date"],
+    input[type="text"],
+    select {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+    }
+
+    button {
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+
+    th, td {
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9fafc;
+    }
+
+    hr {
+        margin: 30px 0;
+        border: none;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+
+<h1>📦 이동 내역 조회</h1>
+
+<form method="get" action="{{ url_for('view_movements_view') }}">
+    <div>
+        <label for="start_date">시작일:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date or '' }}">
+    </div>
+
+    <div>
+        <label for="end_date">종료일:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date or '' }}">
+    </div>
+
+    <div>
+        <label for="movement_type">이동유형:</label>
+        <select name="movement_type" id="movement_type">
+            <option value="">-- 전체 --</option>
+            <option value="입고" {% if movement_type == '입고' %}selected{% endif %}>입고</option>
+            <option value="출고" {% if movement_type == '출고' %}selected{% endif %}>출고</option>
+            <option value="폐기" {% if movement_type == '폐기' %}selected{% endif %}>폐기</option>
+            <option value="창고이동" {% if movement_type == '창고이동' %}selected{% endif %}>창고이동</option>
+            <option value="기타" {% if movement_type == '기타' %}selected{% endif %}>기타</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="search_keyword">제품:</label>
+        <input type="text" id="search_keyword" name="search_keyword" value="{{ search_keyword or '' }}">
+    </div>
+
+    <div>
+        <button type="submit">검색</button>
+    </div>
+</form>
+
+<hr>
+
+<table>
+    <thead>
+        <tr>
+            <th>날짜</th>
+            <th>SKU</th>
+            <th>제품명</th>
+            <th>영문명</th>
+            <th>이동유형</th>
+            <th>박스수량</th>
+            <th>낱개수량</th>
+            <th>출발창고</th>
+            <th>도착창고</th>
+            <th>유통기한</th>
+            <th>이동일자</th>
+            <th>사유</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in movements %}
+        <tr>
+            <td>{{ row['timestamp'] }}</td>
+            <td>{{ row['sku'] }}</td>
+            <td>{{ row['product_name'] }}</td>
+            <td>{{ row['product_name_en'] }}</td>
+            <td>{{ row['movement_type'] }}</td>
+            <td>{{ row['quantity_box'] }}</td>
+            <td>{{ row['quantity_piece'] }}</td>
+            <td>{{ row['from_warehouse'] or '-' }}</td>
+            <td>{{ row['to_warehouse'] or '-' }}</td>
+            <td>{{ row['expiration_date'] or '-' }}</td>
+            <td>{{ row['timestamp'][:10] }}</td>
+            <td>{{ row['reason'] or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

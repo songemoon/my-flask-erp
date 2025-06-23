@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}검색 / 재고 관리{% endblock %}
+
+{% block content %}
+<h1>🔍 재고 검색</h1>
+<form method="get" class="search-form">
+    <input type="text" name="q" value="{{ query }}" placeholder="제품명, SKU, 바코드 검색" class="search-input">
+    <button type="submit" class="search-button">검색</button>
+</form>
+
+<h2 style="margin-bottom: 10px;">📦 전체 재고 (창고별)</h2>
+
+<!-- 창고 탭 -->
+<div class="tabs">
+    {% for warehouse in grouped_inventory.keys() %}
+        <div class="tab" id="tab-{{ warehouse }}" onclick="showTab('{{ warehouse }}')">
+            {{ warehouse }}
+        </div>
+    {% endfor %}
+    <div class="tab" id="tab-입고예정" onclick="showTab('입고예정')">입고예정 (Incoming)</div>
+</div>
+
+<!-- 창고별 테이블 -->
+{% for warehouse, items in grouped_inventory.items() %}
+    <div class="tab-content" id="content-{{ warehouse }}">
+        <h3>{{ warehouse }} 재고</h3>
+        <div class="table-wrapper">
+            <table class="styled-table sortable">
+                <thead>
+                    <tr>
+                        <th>SKU ⬍</th>
+                        <th>제품명 ⬍</th>
+                        <th>영문명 ⬍</th>
+                        <th>바코드 ⬍</th>
+                        <th>Qty ⬍</th>
+                        <th>Shelf ⬍</th>
+                        <th>유통기한 ⬍</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        {% if not query or
+                              (query.lower() in (item.product_name or '').lower() or
+                               query.lower() in (item.sku or '').lower() or
+                               query.lower() in (item.barcode or '').lower()) %}
+                            <tr class="{{ item.get('highlight', '') }}">
+                                <td>{{ item.sku }}</td>
+                                <td class="left-align">{{ item.product_name }}</td>
+                                <td class="left-align">{{ item.english_name or '' }}</td>
+                                <td>{{ item.barcode or '' }}</td>
+                                <td>{{ item.total_qty }}</td>
+                                <td>{{ item.shelf_location or '' }}</td>
+                                <td>{{ item.expiration_date or '' }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- 입고예정 탭 내용 -->
+<div class="tab-content" id="content-입고예정">
+    <h3>📥 입고예정 품목 (Incoming)</h3>
+    {% if pending_items %}
+    <div class="table-wrapper">
+        <table class="styled-table sortable">
+            <thead>
+                <tr>
+                    <th>발주번호 ⬍</th>
+                    <th>SKU ⬍</th>
+                    <th>제품명 ⬍</th>
+                    <th>입고처리</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pending_items %}
+                <tr>
+                    <td>{{ item.order_code }}</td>
+                    <td>{{ item.product_sku }}</td>
+                    <td class="left-align">{{ item.product_name }}</td>
+                    <td style="padding: 0;">
+                        <a href="{{ url_for('receive_order', order_code=item.order_code) }}">
+                            <button type="button" class="receive-button">입고</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>현재 입고 예정인 품목이 없습니다.</p>
+    {% endif %}
+</div>
+
+<style>
+    .search-form {
+        margin-bottom: 30px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .search-input {
+        padding: 8px 10px;
+        width: 320px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        box-sizing: border-box;
+    }
+
+    .search-button {
+        padding: 8px 16px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .search-button:hover {
+        background-color: #0f75d3;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .tab {
+        padding: 10px 18px;
+        background-color: #dcdde1;
+        border: 1px solid #ccc;
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+
+    .tab:hover {
+        background-color: #b2bec3;
+    }
+
+    .tab.active {
+        background-color: #ffffff;
+        font-weight: bold;
+        border-bottom: 2px solid white;
+    }
+
+    .tab-content {
+        display: none;
+        border: 1px solid #ccc;
+        border-top: none;
+        padding: 20px;
+        border-radius: 0 0 10px 10px;
+        background-color: #ffffff;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: 10px;
+    }
+
+    .styled-table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 1000px;
+        font-size: 0.9rem;
+        background-color: #ffffff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .styled-table th, .styled-table td {
+        border: 1px solid #dcdde1;
+        padding: 10px 12px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .styled-table th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .left-align {
+        text-align: left !important;
+        padding-left: 14px !important;
+    }
+
+    .receive-button {
+        padding: 6px 12px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .receive-button:hover {
+        background-color: #388e3c;
+    }
+
+    .expired {
+        background-color: #fdecea !important;
+    }
+
+    .expiring {
+        background-color: #fff8e1 !important;
+    }
+</style>
+<script>
+function showTab(tabName) {
+    const contents = document.querySelectorAll(".tab-content");
+    contents.forEach(c => c.classList.remove("active"));
+
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(t => t.classList.remove("active"));
+
+    document.getElementById("tab-" + tabName).classList.add("active");
+    document.getElementById("content-" + tabName).classList.add("active");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const firstTab = document.querySelector(".tab");
+    if (firstTab) firstTab.click();
+
+    // 정렬 기능 추가
+    document.querySelectorAll(".sortable th").forEach(header => {
+        header.style.cursor = "pointer";
+        header.addEventListener("click", () => {
+            const table = header.closest("table");
+            const index = Array.from(header.parentElement.children).indexOf(header);
+            const ascending = !header.classList.contains("asc");
+            Array.from(table.querySelectorAll("th")).forEach(th => th.classList.remove("asc", "desc"));
+            header.classList.add(ascending ? "asc" : "desc");
+
+            const rows = Array.from(table.tBodies[0].rows);
+            rows.sort((a, b) => {
+                const aText = a.cells[index].textContent.trim();
+                const bText = b.cells[index].textContent.trim();
+                return ascending ? aText.localeCompare(bText, 'ko') : bText.localeCompare(aText, 'ko');
+            });
+            rows.forEach(row => table.tBodies[0].appendChild(row));
+        });
+    });
+});
+</script>
+{% endblock %}

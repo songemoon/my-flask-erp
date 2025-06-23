@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}재고 관리{% endblock %}
+
+{% block content %}
+<style>
+    h1, h2 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .tab-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .tab {
+        padding: 8px 16px;
+        border-radius: 6px;
+        background-color: #dcdde1;
+        color: #2f3542;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+
+    .tab:hover {
+        background-color: #a4b0be;
+        color: white;
+    }
+
+    .tab.active {
+        background-color: #b0b3b8; 
+        color: #2f3542;
+    }
+
+    form {
+        max-width: 520px;
+        margin: 0 auto 30px;
+        background-color: var(--card-bg);
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        font-size: 0.95rem;
+    }
+    .form-row {
+        margin-bottom: 16px;
+    }
+    .form-row label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 6px;
+    }
+    label {
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+        margin-bottom: 16px;
+    }
+
+    button {
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .success-message,
+    .error-message {
+        max-width: 520px;
+        margin: 0 auto 30px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+        background-color: #fdecea;
+        color: #c0392b;
+        border: 1px solid #e74c3c;
+    }
+
+    #productModal,
+    #modalOverlay {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+    }
+
+    #modalOverlay {
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+    }
+
+    #productModal {
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 420px;
+        background: white;
+        padding: 24px 30px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    #productModal h3 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 16px;
+        color: var(--text-color);
+        text-align: center;
+    }
+
+    #productList {
+        max-height: 220px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+    }
+
+    #productList label {
+        display: block;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    #productList label:hover {
+        background-color: #f1f2f6;
+    }
+
+    .modal-button {
+        width: 100%;
+        padding: 10px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .modal-button:hover {
+        background-color: var(--primary-hover);
+    }
+</style>
+
+
+<h1>재고 통합 관리</h1>
+
+<!-- 탭 메뉴 -->
+<div class="tab-container">
+    <a class="tab {{ 'active' if action == 'in' else '' }}" href="{{ url_for('manage_inventory', action='in') }}">입고 (In)</a>
+    <a class="tab {{ 'active' if action == 'out' else '' }}" href="{{ url_for('manage_inventory', action='out') }}">출고 (Out)</a>
+    <a class="tab {{ 'active' if action == 'transfer' else '' }}" href="{{ url_for('manage_inventory', action='transfer') }}">창고이동 (Transfer)</a>
+</div>
+
+<!-- 메시지 표시 -->
+{% if message %}
+    {% if "✅" in message %}
+        <div class="success-message">{{ message|safe }}</div>
+    {% else %}
+        <div class="error-message">{{ message|safe }}</div>
+    {% endif %}
+{% endif %}
+
+<!-- 제품 선택 모달 -->
+<div id="productModal" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:white; border:1px solid #ccc; padding:20px; z-index:1000;">
+    <h3>Choose which product</h3>
+    <div id="productList"></div>
+    <button onclick="closeModal()">Close</button>
+</div>
+<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;" onclick="closeModal()"></div>
+
+<!-- 각 액션별 폼 -->
+{% if action == 'in' %}
+    <h2>📦 입고 (In)</h2>
+    {% if not product %}
+        <form method="post">
+            <input type="hidden" name="action" value="{{ action }}">
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
+            <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
+        </form>
+    {% else %}
+        <form method="post">
+            <input type="hidden" name="action" value="in">
+            <input type="hidden" name="identifier" value="{{ identifier }}">
+
+            <p><b>SKU:</b> {{ identifier }}</p>
+            <p><b>제품명:</b> {{ product.name }}</p>
+            <p><b>영문명:</b> {{ product.english_name }}</p>
+
+            <label>박스 수량 (Box Qty)</label>
+            <input name="box_qty" type="number">
+
+            <label>낱개 수량 (Piece Qty)</label>
+            <input name="piece_qty" type="number">
+
+            <label>입수량 (Unit)</label>
+            <input name="unit_per_box" type="number">
+
+            <label>창고명 (Warehouse)</label>
+            <select name="warehouse">
+                <option value="신창고 A">신창고 (A)</option>
+                <option value="매장창고 B">매장창고 (B)</option>
+                <option value="기타 C">기타 (C)</option>
+            </select>
+
+            <label>선반 위치 (Shelf)</label>
+            <input name="shelf_location" type="text">
+
+            <label>발주번호 (Order No.)</label>
+            <input name="order_number" type="text">
+
+            <label>유통기한 (Expiry)</label>
+            <input type="date" name="expiration_date">
+
+            <button type="submit">Confirm</button>
+        </form>
+
+
+    {% endif %}
+{% elif action == 'out' %}
+    <h2>📤 출고 (Out)</h2>
+    {% if not product %}
+        <form method="post">
+            <input type="hidden" name="action" value="{{ action }}">
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
+            <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
+        </form>
+    {% else %}
+        <form method="post">
+            <input type="hidden" name="action" value="{{ action }}">
+            <input type="hidden" name="identifier" value="{{ identifier }}">
+            <p><b>SKU:</b> {{ identifier }}</p>
+            <p><b>제품명:</b> {{ product.name }}</p>
+            <p><b>영문명:</b> {{ product.english_name }}</p>
+            출고 유형 (Type):
+            <select name="movement_type">
+                <option value="출고">출고 (Out)</option>
+                <option value="폐기">폐기 (Discard)</option>
+                <option value="기타">기타 (Else)</option>
+            </select>
+            창고명 (Warehouse):
+            <select name="warehouse">
+                <option value="신창고 A">신창고 (A)</option>
+                <option value="매장창고 B">매장창고 (B)</option>
+                <option value="기타 C">기타 (C)</option>
+            </select>
+            박스 수량 (Box Qty): <input name="box_qty" type="number">
+            낱개 수량 (Piece Qty): <input name="piece_qty" type="number">
+            입수량 (Unit): <input name="unit_per_box" type="number">
+            유통기한 (Expiry): <input type="date" name="expiration_date">
+            사유 (Reason): <input name="reason">
+            <button type="submit">Confirm</button>
+        </form>
+    {% endif %}
+{% elif action == 'transfer' %}
+    <h2>🔁 창고이동 (Transfer)</h2>
+    {% if not product %}
+        <form method="post">
+            <input type="hidden" name="action" value="{{ action }}">
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
+            <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
+        </form>
+    {% else %}
+        <form method="post">
+            <input type="hidden" name="action" value="{{ action }}">
+            <input type="hidden" name="identifier" value="{{ identifier }}">
+            <p><b>SKU:</b> {{ identifier }}</p>
+            <p><b>제품명:</b> {{ product.name }}</p>
+            <p><b>영문명:</b> {{ product.english_name }}</p>
+            박스 수량 (Box Qty): <input name="box_qty" type="number">
+            낱개 수량 (Piece Qty): <input name="piece_qty" type="number">
+            입수량 (Unit): <input name="unit_per_box" type="number">
+            출발 창고 (From):
+            <select name="from_warehouse">
+                <option value="신창고 A">신창고 (A)</option>
+                <option value="매장창고 B">매장창고 (B)</option>
+                <option value="기타 C">기타 (C)</option>
+            </select>
+            도착 창고 (To):
+            <select name="to_warehouse">
+                <option value="신창고 A">신창고 (From)</option>
+                <option value="매장창고 B">매장창고 (To)</option>
+                <option value="기타 C">기타 (C)</option>
+            </select>
+            유통기한 (Expiry): <input type="date" name="expiration_date">
+            <button type="submit">Confirm</button>
+        </form>
+    {% endif %}
+{% endif %}
+
+<!-- 팝업 로직 스크립트 -->
+<script>
+function fetchProductsByBarcode() {
+    const barcode = document.querySelector('input[name="identifier"]').value;
+    fetch(`/api/get_products_by_barcode?identifier=${barcode}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.length === 0) {
+                alert("해당 바코드로 등록된 제품이 없습니다.");
+                return;
+            } else if (data.length === 1) {
+                document.querySelector('input[name="identifier"]').value = data[0].sku;
+                document.querySelector('form').submit();
+            } else {
+                const list = document.getElementById("productList");
+                list.innerHTML = "";
+                data.forEach(p => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `
+                        <label>
+                            <input type="radio" name="select_sku" value="${p.sku}"> ${p.name} (${p.english_name}) [${p.sku}]
+                        </label>
+                    `;
+                    list.appendChild(div);
+                });
+
+                const confirmBtn = document.createElement("button");
+                confirmBtn.innerText = "선택";
+                confirmBtn.onclick = function () {
+                    const selected = document.querySelector('input[name="select_sku"]:checked');
+                    if (selected) {
+                        document.querySelector('input[name="identifier"]').value = selected.value;
+                        closeModal();
+                        document.querySelector('form').submit();
+                    }
+                };
+                list.appendChild(confirmBtn);
+
+                openModal();
+            }
+        });
+}
+
+function openModal() {
+    document.getElementById("productModal").style.display = "block";
+    document.getElementById("modalOverlay").style.display = "block";
+}
+function closeModal() {
+    document.getElementById("productModal").style.display = "none";
+    document.getElementById("modalOverlay").style.display = "none";
+}
+</script>
+
+{% endblock %}

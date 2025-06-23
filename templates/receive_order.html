@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}발주번호: {{ order_code }} 입고 등록{% endblock %}
+
+{% block content %}
+<style>
+    h2 {
+        margin-top: 20px;
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #2f3542;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    form {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #dcdde1;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        font-size: 0.95rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        background-color: #ffffff;
+        border: 1px solid #dcdde1;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 12px 10px;
+        border: 1px solid #dcdde1;
+        text-align: center;
+    }
+
+    th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+    th.product-name,
+    td.product-name {
+        min-width: 180px;
+        text-align: left;
+        padding-left: 14px;
+    }
+    td input,
+    td select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        box-sizing: border-box;
+    }
+
+    td input[type="number"] {
+        text-align: right;
+    }
+
+    .barcode-warning {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        text-align: left;
+    }
+
+    button[type="submit"] {
+        margin-top: 30px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        padding: 10px 22px;
+        font-size: 0.95rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0f75d3;
+    }
+
+    .alert {
+        margin-top: 20px;
+        padding: 14px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+        background-color: #fdecea;
+        color: #c0392b;
+        border: 1px solid #e74c3c;
+    }
+</style>
+
+
+<h2>📦 발주번호: {{ order_code }} 입고 등록</h2>
+
+<form method="post">
+    <input type="hidden" name="order_code" value="{{ order_code }}">
+    <table>
+        <thead>
+            <tr>
+                <th class="product-name">제품명</th>
+                <th class="sku">SKU</th>
+                <th class="barcode">바코드</th>
+                <th class="unit">입수</th>
+                <th class="box-qty">박스수량</th>
+                <th class="piece-qty">낱개수량</th>
+                <th class="warehouse">창고</th>
+                <th class="shelf">선반</th>
+                <th class="expiry">유통기한</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+            {% set idx = loop.index0 %}
+            <tr>
+                <td class="product-name">
+                    {{ item.product_name }}
+                    <input type="hidden" name="name_{{ idx }}" value="{{ item.product_name }}">
+                </td>
+                <td>
+                    {{ item.product_sku }}
+                    <input type="hidden" name="sku_{{ idx }}" value="{{ item.product_sku }}">
+                </td>
+                <td>
+                    <input type="text"
+                        name="barcode_scan_{{ idx }}"
+                        placeholder="바코드 스캔"
+                        oninput="checkBarcode({{ idx }}, '{{ item.barcode | e }}')">
+                    <div id="barcode_warning_{{ idx }}" class="barcode-warning"></div>
+                </td>
+                <td><input type="number" name="unit_per_box_{{ idx }}" value="1" required></td>
+                <td><input type="number" name="box_qty_{{ idx }}" value="0" required></td>
+                <td><input type="number" name="piece_qty_{{ idx }}" value="0" required></td>
+                <td>
+                    <select name="warehouse_{{ idx }}" required>
+                        <option value="">-- 창고 선택 --</option>
+                        <option value="신창고 A">신창고 A</option>
+                        <option value="매장창고 B">매장창고 B</option>
+                        <option value="기타 C">기타 C</option>
+                    </select>
+                </td>
+                <td><input type="text" name="shelf_location_{{ idx }}"></td>
+                <td><input type="date" name="expiration_date_{{ idx }}"></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit">입고 등록</button>
+</form>
+
+{% if success %}
+  <div class="alert alert-success">{{ success }}</div>
+{% endif %}
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<script>
+function cleanBarcode(value) {
+    return (value || "").replace(/[^0-9a-zA-Z]/g, "").trim().toLowerCase();
+}
+
+function checkBarcode(index, expectedBarcode) {
+    const input = document.querySelector(`input[name='barcode_scan_${index}']`);
+    const warning = document.getElementById(`barcode_warning_${index}`);
+
+    const typed = cleanBarcode(input.value);
+    const expected = cleanBarcode(expectedBarcode);
+
+    if (typed && typed !== expected) {
+        warning.innerText = `❌ 바코드가 일치하지 않습니다. (${expectedBarcode})`;
+        input.style.borderColor = 'red';
+    } else {
+        warning.innerText = '';
+        input.style.borderColor = '';
+    }
+}
+</script>
+{% endblock %}

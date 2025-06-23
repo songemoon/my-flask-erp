@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}📅 일정 캘린더{% endblock %}
+
+{% block content %}
+<style>
+  .page-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .page-header h2 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+  }
+
+  .filter-section {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    padding: 16px 20px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .filter-section label {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-section select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: #fff;
+  }
+
+  .add-button {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 900px;
+    margin: 0 auto 16px;
+  }
+
+  .add-button a button {
+    background-color: var(--primary);
+    color: #fff;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .add-button a button:hover {
+    background-color: var(--primary-hover);
+  }
+
+  #calendar {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+</style>
+
+<div class="page-header">
+  <h2>📅 전체 일정 보기</h2>
+</div>
+
+<div class="add-button">
+  <a href="{{ url_for('schedule.add_schedule') }}">
+    <button>➕ 일정 등록</button>
+  </a>
+</div>
+
+<div class="filter-section">
+  <label>담당자:
+    <select id="employee-filter">
+      <option value="">전체</option>
+      {% for emp in employees %}
+      <option value="{{ emp }}">{{ emp }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>일정종류:
+    <select id="type-filter">
+      <option value="">전체</option>
+      <option value="휴가">휴가</option>
+      <option value="일정">일정</option>
+      <option value="미팅">미팅</option>
+    </select>
+  </label>
+</div>
+
+<div id="calendar"></div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+    let calendar;
+
+    function fetchAndRenderEvents() {
+      const employee = document.getElementById('employee-filter').value;
+      const type = document.getElementById('type-filter').value;
+
+      const params = new URLSearchParams();
+      if (employee) params.append('employee', employee);
+      if (type) params.append('type', type);
+
+      fetch('/api/schedules?' + params.toString())
+        .then(response => response.json())
+        .then(events => {
+          calendar.removeAllEvents();
+          calendar.addEventSource(events);
+        });
+    }
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'ko',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek'
+      },
+      events: [],
+      eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      },
+      views: {
+        dayGridMonth: {
+          displayEventTime: false
+        },
+        timeGridWeek: {
+          displayEventTime: true
+        }
+      },
+      eventClick: function(info) {
+        const eventId = info.event.id;
+        if (eventId) {
+          window.location.href = `/schedule/edit/${eventId}`;
+        }
+      }
+    });
+
+    calendar.render();
+    fetchAndRenderEvents();
+
+    document.getElementById('employee-filter').addEventListener('change', fetchAndRenderEvents);
+    document.getElementById('type-filter').addEventListener('change', fetchAndRenderEvents);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}발주 수정 | ERP 시스템{% endblock %}
+
+{% block content %}
+<style>
+    form {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        font-size: 0.95rem;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 30px;
+        color: var(--text-color);
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        background-color: #fff;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    #searchResults {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        background: white;
+        position: absolute;
+        width: 100%;
+        z-index: 100;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .search-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .search-item:hover {
+        background-color: var(--highlight);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    th, td {
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    th {
+        background-color: #eef3f8;
+        font-weight: bold;
+    }
+
+    .button-group {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .button-group button {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-right: 12px;
+        transition: background-color 0.2s ease;
+    }
+
+    .button-group button[type="submit"] {
+        background-color: #ffa502;
+        color: white;
+    }
+
+    .button-group button[type="submit"]:hover {
+        background-color: #e18e00;
+    }
+
+    .button-group a button {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    .button-group a button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+        position: relative;
+    }
+
+    .delete-row-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .delete-row-btn:hover {
+        background-color: #c0392b;
+    }
+</style>
+
+<h1>🧾 발주 수정 ({{ order_code }})</h1>
+
+<form method="post" id="orderForm" autocomplete="off">
+    <div class="form-section">
+        <label>담당자명</label>
+        <input type="text" value="{{ user.name }}" readonly>
+    </div>
+
+    <div class="form-section">
+        <label>거래처</label>
+        <select name="supplier_display" disabled>
+            {% for s in suppliers %}
+                <option value="{{ s.id }}" {% if s.id == supplier_id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="supplier_id" value="{{ supplier_id }}">
+    </div>
+
+    <div class="form-section">
+        <label>제품 검색 (SKU, 바코드, 제품명)</label>
+        <input type="text" id="productSearchInput" placeholder="제품 검색">
+        <div id="searchResults"></div>
+    </div>
+
+    <table id="orderTable">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>제품명</th>
+                <th>수량</th>
+                <th>삭제</th>
+            </tr>
+        </thead>
+        <tbody id="orderTableBody">
+            {% for item in items %}
+            {% set i = loop.index0 %}
+            <tr>
+                <td class="item-no">{{ i + 1 }}</td>
+                <td>
+                    <input type="text" name="product_name_{{ i }}" value="{{ item.product_name }}" required readonly>
+                    <input type="hidden" name="product_sku_{{ i }}" value="{{ item.product_sku }}">
+                </td>
+                <td>
+                    <input type="number" name="quantity_{{ i }}" min="1" value="{{ item.quantity }}" required>
+                </td>
+                <td>
+                    <button type="button" class="delete-row-btn">삭제</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="form-section">
+        <label>요청사항 (선택)</label>
+        <textarea name="inquiry" rows="4">{{ inquiry }}</textarea>
+    </div>
+
+    <div class="button-group">
+        <button type="submit">수정 완료</button>
+        <a href="{{ url_for('print_order', order_code=order_code) }}" target="_blank">
+            <button type="button">발주서 출력</button>
+        </a>
+    </div>
+</form>
+
+<script>
+    const orderTableBody = document.querySelector("#orderTableBody");
+    const searchInput = document.getElementById("productSearchInput");
+    const resultsDiv = document.getElementById("searchResults");
+
+    function updateRowNumbers() {
+        const rows = orderTableBody.querySelectorAll("tr");
+        rows.forEach((row, index) => {
+            row.querySelector(".item-no").textContent = index + 1;
+            row.querySelector("input[name^='product_name']").name = `product_name_${index}`;
+            row.querySelector("input[name^='quantity']").name = `quantity_${index}`;
+            row.querySelector("input[type='hidden']").name = `product_sku_${index}`;
+        });
+    }
+
+    function deleteRow(event) {
+        if (orderTableBody.querySelectorAll("tr").length === 1) {
+            alert("최소 1개의 품목이 필요합니다.");
+            return;
+        }
+        const row = event.target.closest("tr");
+        row.remove();
+        updateRowNumbers();
+    }
+
+    orderTableBody.querySelectorAll(".delete-row-btn").forEach(btn => {
+        btn.addEventListener("click", deleteRow);
+    });
+
+    function addProductRow(sku, name) {
+        const rowCount = orderTableBody.querySelectorAll("tr").length;
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+            <td class="item-no">${rowCount + 1}</td>
+            <td>
+                <input type="text" name="product_name_${rowCount}" value="${name}" required readonly>
+                <input type="hidden" name="product_sku_${rowCount}" value="${sku}">
+            </td>
+            <td>
+                <input type="number" name="quantity_${rowCount}" min="1" value="1" required>
+            </td>
+            <td>
+                <button type="button" class="delete-row-btn">삭제</button>
+            </td>
+        `;
+        orderTableBody.appendChild(newRow);
+        newRow.querySelector(".delete-row-btn").addEventListener("click", deleteRow);
+        updateRowNumbers();
+    }
+
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            resultsDiv.innerHTML = "";
+            return;
+        }
+        fetch(`/api/product_search?query=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="search-item">검색 결과가 없습니다.</div>';
+                    return;
+                }
+                resultsDiv.innerHTML = data.results.map(p =>
+                    `<div class="search-item" data-sku="${p.sku}" data-name="${p.name}">${p.sku} - ${p.name}</div>`
+                ).join("");
+                document.querySelectorAll(".search-item").forEach(item => {
+                    item.onclick = () => {
+                        addProductRow(item.dataset.sku, item.dataset.name);
+                        resultsDiv.innerHTML = "";
+                        searchInput.value = "";
+                    };
+                });
+            });
+    });
+</script>
+{% endblock %}
