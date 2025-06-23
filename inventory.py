@@ -159,7 +159,7 @@ def inventory_out():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT sku, name, english_name, barcode FROM products WHERE sku = %s OR barcode = %s", (identifier, identifier))
-        products = cursor.fetchall()
+        products = cursor.fetchall()        
 
         if not products:
             conn.close()
@@ -183,35 +183,34 @@ def inventory_out():
             )
 
         if not expiration_date or expiration_date.strip() == "":
-            cursor.execute("""
-                SELECT id, expiration_date, total_qty FROM inventory
-                WHERE sku = %s AND total_qty > 0
-                ORDER BY expiration_date ASC
-                LIMIT 1
-            """, (sku,))
+            cursor.execute(
+                "SELECT id, expiration_date, total_qty FROM inventory WHERE sku = %s AND total_qty > 0 ORDER BY expiration_date ASC LIMIT 1",
+                (sku,)
+            )
             row = cursor.fetchone()
-
             if not row:
                 conn.close()
                 message = "❌ 출고 가능한 재고가 없습니다."
                 return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
-            inventory_id, exp_date, current_qty = row
+            # 수정된 부분: 딕셔너리 키 접근
+            inventory_id   = row["id"]
+            exp_date       = row["expiration_date"]
+            current_qty    = row["total_qty"]
             expiration_date = exp_date if isinstance(exp_date, str) else exp_date.strftime("%Y-%m-%d")
         else:
-            cursor.execute("""
-                SELECT id, total_qty FROM inventory
-                WHERE sku = %s AND expiration_date = %s AND total_qty > 0
-                LIMIT 1
-            """, (sku, expiration_date))
+            cursor.execute(
+                "SELECT id, total_qty FROM inventory WHERE sku = %s AND expiration_date = %s AND total_qty > 0 LIMIT 1",
+                (sku, expiration_date)
+            )
             row = cursor.fetchone()
-
             if not row:
                 conn.close()
                 message = f"❌ 해당 유통기한({expiration_date}) 재고 없음."
                 return render_template("manage_inventory.html", action="out", message=message, identifier=identifier, product=None)
 
-            inventory_id, current_qty = row
+            inventory_id = row["id"]
+            current_qty  = row["total_qty"]
 
         if total_out_qty > current_qty:
             conn.close()
@@ -274,19 +273,27 @@ def search_inventory():
     cursor.execute("SELECT * FROM inventory WHERE is_active = 1")
     all_rows = cursor.fetchall()
 
+
     def highlight_row(row_dict):
         exp = row_dict.get("expiration_date")
-        if exp:
-            exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
-            if exp_date < today:
-                return "expired"
-            elif (exp_date - today).days <= 30:
-                return "expiring"
+        if not exp:
+            return ""
+        # exp가 date 객체라면 그대로, 문자열이라면 파싱
+        if isinstance(exp, str):
+            try:
+                exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
+            except ValueError:
+                return ""
+        else:
+            exp_date = exp
+        if exp_date < today:
+            return "expired"
+        elif (exp_date - today).days <= 30:
+            return "expiring"
         return ""
 
     all_inventory = []
-    for r in all_rows:
-        row_dict = dict(zip([desc[0] for desc in cursor.description], r))
+    for row_dict in all_rows:
         row_dict["highlight"] = highlight_row(row_dict)
         all_inventory.append(row_dict)
 
