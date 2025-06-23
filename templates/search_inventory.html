@@ -45,13 +45,13 @@
                                query.lower() in (item.sku or '').lower() or
                                query.lower() in (item.barcode or '').lower()) %}
                             <tr class="{{ item.get('highlight', '') }}">
-                                <td>{{ item.sku }}</td>
-                                <td class="left-align">{{ item.product_name }}</td>
-                                <td class="left-align">{{ item.english_name or '' }}</td>
-                                <td>{{ item.barcode or '' }}</td>
-                                <td>{{ item.total_qty }}</td>
-                                <td>{{ item.shelf_location or '' }}</td>
-                                <td>{{ item.expiration_date or '' }}</td>
+                                <td>{{ item['sku'] }}</td>
+                                <td class="left-align">{{ item['product_name'] }}</td>
+                                <td class="left-align">{{ item['english_name'] or '' }}</td>
+                                <td>{{ item['barcode'] or '' }}</td>
+                                <td>{{ item['total_qty'] }}</td>
+                                <td>{{ item['shelf_location'] or '' }}</td>
+                                <td>{{ item['expiration_date'] or '' }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}
@@ -78,9 +78,9 @@
             <tbody>
                 {% for item in pending_items %}
                 <tr>
-                    <td>{{ item.order_code }}</td>
-                    <td>{{ item.product_sku }}</td>
-                    <td class="left-align">{{ item.product_name }}</td>
+                    <td>{{ item['order_code'] }}</td>
+                    <td>{{ item['product_sku'] }}</td>
+                    <td class="left-align">{{ item['product_name'[] }}</td>
                     <td style="padding: 0;">
                         <a href="{{ url_for('receive_order', order_code=item.order_code) }}">
                             <button type="button" class="receive-button">입고</button>
