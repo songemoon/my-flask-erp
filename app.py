@@ -356,19 +356,19 @@ def health_db():
         return jsonify(status="error", detail=str(e)), 500
 
 
-@app.route("/init-db")
-def init_db():
-    create_table()
-    create_inventory_table()
-    create_inventory_movement_table()
-    create_supplier_table()
-    create_user_table()
-    create_cost_history_table()
-    create_order_table()
-    create_sales_volume_table()
-    create_real_stock_table()
-    create_schedule_table()
-    return "✅ DB 초기화가 완료되었습니다."
+#@app.route("/init-db")
+#def init_db():
+ #   create_table()
+ #   create_inventory_table()
+ #   create_inventory_movement_table()
+ #   create_supplier_table()
+ #   create_user_table()
+ #   create_cost_history_table()
+ #   create_order_table()
+ #   create_sales_volume_table()
+ #   create_real_stock_table()
+ #   create_schedule_table()
+ #   return "✅ DB 초기화가 완료되었습니다."
 
 
 

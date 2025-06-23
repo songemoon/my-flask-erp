@@ -11,7 +11,7 @@ def add_schedule():
     if request.method == "POST":
         title = request.form["title"]
         start = request.form["start"]
-        end = request.form["end"]
+        end_time = request.form["end_time"]
         schedule_type = request.form["type"]
 
         user = session.get("user")
@@ -27,7 +27,7 @@ def add_schedule():
                 id SERIAL PRIMARY KEY,
                 title TEXT NOT NULL,
                 start TEXT NOT NULL,
-                end TEXT,
+                end_time TEXT,
                 type TEXT NOT NULL,
                 employee_name TEXT,
                 username TEXT,
@@ -36,9 +36,9 @@ def add_schedule():
         """)
 
         cursor.execute("""
-            INSERT INTO schedules (title, start, end, type, employee_name, username, password)
+            INSERT INTO schedules (title, start, end_time, type, employee_name, username, password)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (title, start, end, schedule_type, employee_name, user["username"] if user else None, password_hash))
+        """, (title, start, end_time, schedule_type, employee_name, user["username"] if user else None, password_hash))
 
         conn.commit()
         conn.close()
@@ -76,7 +76,7 @@ def api_get_schedules():
             "id": row["id"],
             "title": f"{row['title']} ({row['employee_name']})",
             "start": row["start"],
-            "end": row["end"],
+            "end_time": row["end_time"],
             "color": "#ADD8E6" if row["type"] == "휴가" else "#FFD700"
         })
 
@@ -120,14 +120,14 @@ def edit_schedule(schedule_id):
 
         title = request.form["title"]
         start = request.form["start"]
-        end = request.form["end"]
+        end_time = request.form["end_time"]
         schedule_type = request.form["type"]
 
         cursor.execute("""
             UPDATE schedules
-            SET title = %s, start = %s, end = %s, type = %s
+            SET title = %s, start = %s, end_time = %s, type = %s
             WHERE id = %s
-        """, (title, start, end, schedule_type, schedule_id))
+        """, (title, start, end_time, schedule_type, schedule_id))
         conn.commit()
         conn.close()
         return redirect(url_for("schedule.view_calendar"))
@@ -177,7 +177,7 @@ def create_schedule_table():
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             start TEXT NOT NULL,
-            end TEXT,
+            end_time TEXT,
             type TEXT NOT NULL,
             employee_name TEXT,
             username TEXT,
