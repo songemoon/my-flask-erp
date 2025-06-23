@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-from db import get_db_connection  # DB 연결 함수 가져오기
+import sqlite3
+
+DB_PATH = "database.db"
 
 def list_all_users():
     """
     모든 직원의 ID, username, name, english_name을 출력합니다.
     """
-    conn = get_db_connection()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT id, username, name, english_name FROM users ORDER BY id")
     users = cur.fetchall()
@@ -16,7 +19,7 @@ def list_all_users():
         print("등록된 직원이 없습니다.")
     else:
         for u in users:
-            print(f"ID: {u[0]:>3} | 아이디: {u[1]:<15} | 이름: {u[2]:<10} | 영문이름: {u[3]}")
+            print(f"ID: {u['id']:>3} | 아이디: {u['username']:<15} | 이름: {u['name']:<10} | 영문이름: {u['english_name']}")
     print("=================")
 
 def delete_user_by_id(user_id: int) -> bool:
@@ -24,15 +27,15 @@ def delete_user_by_id(user_id: int) -> bool:
     주어진 user_id의 계정을 삭제합니다.
     반환: 삭제 성공(True) / 해당 ID 없음(False)
     """
-    conn = get_db_connection()
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM users WHERE id = %s", (user_id,))
+    cur.execute("SELECT COUNT(*) FROM users WHERE id = ?", (user_id,))
     exists = cur.fetchone()[0]
     if not exists:
         conn.close()
         return False
 
-    cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
     conn.commit()
     conn.close()
     return True

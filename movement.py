@@ -1,14 +1,14 @@
-import sqlite3
 from flask import request, render_template
 from datetime import datetime, timedelta, date
+from db import get_db_connection
 
 def view_movements():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
     search_keyword = request.args.get("search_keyword")
     movement_type = request.args.get("movement_type")
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
+
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     query = """
@@ -20,22 +20,22 @@ def view_movements():
     params = []
 
     if start_date:
-        query += " AND DATE(m.timestamp) >= ?"
+        query += " AND DATE(m.timestamp) >= %s"
         params.append(start_date)
     if end_date:
-        query += " AND DATE(m.timestamp) <= ?"
+        query += " AND DATE(m.timestamp) <= %s"
         params.append(end_date)
     if movement_type:
-        query += " AND m.movement_type = ?"
+        query += " AND m.movement_type = %s"
         params.append(movement_type)
     if search_keyword:
         keyword = f"%{search_keyword}%"
         query += """
             AND (
-                m.sku LIKE ?
-                OR p.barcode LIKE ?
-                OR p.name LIKE ?
-                OR p.english_name LIKE ?
+                m.sku ILIKE %s
+                OR p.barcode ILIKE %s
+                OR p.name ILIKE %s
+                OR p.english_name ILIKE %s
             )
         """
         params.extend([keyword, keyword, keyword, keyword])
@@ -48,12 +48,13 @@ def view_movements():
 
     return render_template("inventory_movements.html", movements=movements)
 
+
 def create_inventory_movement_table():
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS inventory_movement (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
             product_name TEXT,
             product_name_en TEXT,
@@ -64,7 +65,7 @@ def create_inventory_movement_table():
             to_warehouse TEXT,
             expiration_date TEXT,
             reason TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()

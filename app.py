@@ -1,10 +1,19 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
-import sqlite3
 import uuid
 from datetime import datetime, timedelta
 from collections import defaultdict
 import hashlib
 import os
+import psycopg2
+import psycopg2.extras
+from db import get_db_connection
 from common import COUNTRY_CODE_MAP
 from config import Config
 from product import (
@@ -163,12 +172,12 @@ def upload_products():
                     continue
 
                 # DB 저장
-                conn = sqlite3.connect("database.db")
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT OR IGNORE INTO products 
+                    INSERT INTO products 
                     (sku, name, english_name, category_main, category_sub, category_suffix, barcode)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """, (sku, name, english_name, category_main, category_sub, category_suffix, barcode))
                 conn.commit()
                 conn.close()
@@ -204,15 +213,14 @@ def get_products_by_barcode():
     if not identifier:
         return jsonify([])
 
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     # SKU 또는 바코드가 일치하는 제품 모두 조회
     cursor.execute("""
         SELECT sku, name, english_name 
         FROM products 
-        WHERE sku = ? OR barcode = ?
+        WHERE sku = %s OR barcode = %s
     """, (identifier, identifier))
     
     products = cursor.fetchall()
@@ -220,6 +228,7 @@ def get_products_by_barcode():
 
     # 결과를 JSON 형태로 반환
     return jsonify([dict(p) for p in products])
+
 
 @app.route("/inventory/manage", methods=["GET", "POST"])
 @login_required
@@ -335,6 +344,16 @@ def api_product_info():
 from schedule_routes import schedule_bp
 app.register_blueprint(schedule_bp)
 
+
+@app.route("/health/db")
+def health_db():
+    try:
+        conn = get_db_connection()
+        conn.close()
+        return jsonify(status="ok", db="connected")
+    except Exception as e:
+        return jsonify(status="error", detail=str(e)), 500
+
 #if __name__ == "__main__":
 #    create_table()
 #    create_inventory_table()
@@ -346,4 +365,4 @@ app.register_blueprint(schedule_bp)
 #    create_sales_volume_table()
 #    create_real_stock_table()
 #    add_english_name_column()
-    #app.run(debug=True)
+   # app.run(debug=True)

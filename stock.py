@@ -1,19 +1,20 @@
-import sqlite3
+import psycopg2
+import psycopg2.extras
 from flask import request, render_template, redirect, url_for
 import io
 import csv
-
+from db import get_db_connection  # PostgreSQL 접속 함수
 
 def create_real_stock_table():
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS real_stock (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
             product_name TEXT,
             quantity INTEGER NOT NULL,
-            expiry_text TEXT,  -- 날짜 아님, 그냥 문자열
+            expiry_text TEXT,
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -21,7 +22,7 @@ def create_real_stock_table():
     conn.close()
 
 def upload_real_stock():
-    message = None  # ✅ 메시지 변수 선언
+    message = None
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -32,10 +33,10 @@ def upload_real_stock():
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
                 reader = csv.DictReader(stream)
 
-                conn = sqlite3.connect("database.db")
+                conn = get_db_connection()
                 cursor = conn.cursor()
 
-                # ✅ 기존 데이터 삭제
+                # 기존 데이터 삭제
                 cursor.execute("DELETE FROM real_stock")
 
                 for row in reader:
@@ -54,7 +55,7 @@ def upload_real_stock():
 
                     cursor.execute("""
                         INSERT INTO real_stock (sku, product_name, quantity, expiry_text)
-                        VALUES (?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s)
                     """, (sku, name, qty_int, expiry))
 
                 conn.commit()

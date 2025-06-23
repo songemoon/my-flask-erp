@@ -1,10 +1,11 @@
-import sqlite3
 from flask import request, render_template, redirect, url_for, flash, get_flashed_messages
 from datetime import date
 from collections import defaultdict
 import io
 import csv
 from dateutil.relativedelta import relativedelta
+from db import get_db_connection  # PostgreSQL 연결 함수
+
 def upload_sales_volume():
     message = None
 
@@ -16,6 +17,8 @@ def upload_sales_volume():
         if not file or not year or not month:
             message = "❌ 연도, 월, 파일을 모두 입력해주세요."
         else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
             try:
                 year_int = int(year)
                 month_int = int(month)
@@ -23,13 +26,9 @@ def upload_sales_volume():
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
                 reader = csv.DictReader(stream)
 
-                conn = sqlite3.connect("database.db")
-                cursor = conn.cursor()
-
-                # 지정한 연도/월의 기존 데이터만 삭제
                 cursor.execute("""
                     DELETE FROM sales_volume
-                    WHERE year = ? AND month = ?
+                    WHERE year = %s AND month = %s
                 """, (year_int, month_int))
 
                 inserted = 0
@@ -53,9 +52,8 @@ def upload_sales_volume():
 
                     cursor.execute("""
                         INSERT INTO sales_volume (sku, year, month, quantity)
-                        VALUES (?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s)
                     """, (sku, year_int, month_int, qty_int))
-
                     inserted += 1
 
                 conn.commit()
@@ -72,12 +70,10 @@ def upload_sales_volume():
 
 def sales_overview():
     query = request.args.get("q", "").strip()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    # 🔹 실재고 데이터
+    # 실재고 데이터
     cursor.execute("""
         SELECT sku, product_name, expiry_text, SUM(quantity) as quantity 
         FROM real_stock 
@@ -95,15 +91,14 @@ def sales_overview():
             "real_stock": row["quantity"]
         }
 
-    # 🔹 최근 12개월 (최신 → 과거 순)
+    # 최근 12개월
     recent_months = []
     today = date.today()
     for i in range(12):
         dt = today - relativedelta(months=i)
-        ym = dt.strftime("%Y-%m")
-        recent_months.append(ym)
+        recent_months.append(dt.strftime("%Y-%m"))
 
-    # 🔹 판매량 데이터
+    # 판매량 데이터
     cursor.execute("SELECT sku, year, month, quantity FROM sales_volume")
     sales_data = cursor.fetchall()
 
@@ -113,14 +108,14 @@ def sales_overview():
         if ym in recent_months:
             sales_by_sku[row["sku"]][ym] += row["quantity"]
 
-    # 🔹 평균판매량 계산 (최근 4개월 기준)
-    recent_4 = recent_months[:4]  # 최신 4개월
+    # 평균판매량 (최근 4개월)
+    recent_4 = recent_months[:4]
     avg_sales = {}
     for sku, month_dict in sales_by_sku.items():
         values = [month_dict.get(m, 0) for m in recent_4]
         avg_sales[sku] = round(sum(values) / 4, 2) if values else 0
 
-    # 🔹 입고예정 계산
+    # 입고예정 계산
     cursor.execute("SELECT order_code, product_sku, product_name, quantity FROM orders")
     all_orders = cursor.fetchall()
 
@@ -135,7 +130,7 @@ def sales_overview():
 
     conn.close()
 
-    # 🔹 결과 병합
+    # 결과 병합
     final_data = []
     for (sku, expiry), stock in stock_dict.items():
         row = dict(stock)
@@ -145,7 +140,7 @@ def sales_overview():
             row[month] = sales_by_sku[sku].get(month, 0)
         final_data.append(row)
 
-    # 🔹 검색 필터
+    # 검색 필터
     if query:
         final_data = [
             r for r in final_data
@@ -153,14 +148,13 @@ def sales_overview():
         ]
 
     return render_template("sales_overview.html", results=final_data, months=recent_months, query=query)
-    
 
 def create_sales_volume_table():
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sales_volume (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
             year INTEGER NOT NULL,
             month INTEGER NOT NULL,

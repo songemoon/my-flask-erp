@@ -1,10 +1,9 @@
-from flask import request, render_template, redirect, url_for, Blueprint
-from datetime import datetime, timedelta, date
-from collections import defaultdict
 import psycopg2
 import psycopg2.extras
 from db import get_db_connection
-
+from flask import request, render_template, redirect, url_for, Blueprint
+from datetime import datetime, timedelta, date
+from collections import defaultdict
 
 
 
@@ -251,6 +250,7 @@ def inventory_out():
 
     return render_template("manage_inventory.html", action="out", identifier="", message=message, product=None)
 
+
 def search_inventory():
     query = request.args.get("q", "").strip()
     today = datetime.today().date()
@@ -453,6 +453,7 @@ def warehouse_transfer():
         identifier=identifier,
         product=product_data
     )
+
 
 def manage_inventory():
     action = request.args.get("action", "in")

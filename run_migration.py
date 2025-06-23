@@ -1,9 +1,15 @@
 # run_migration.py
 
-import sqlite3
+import psycopg2
+import psycopg2.extras
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DB_URL = os.environ.get("DATABASE_URL")
 
 def rename_orders_to_backup():
-    conn = sqlite3.connect("database.db")
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     cursor.execute("ALTER TABLE orders RENAME TO orders_backup;")
     conn.commit()
@@ -11,11 +17,11 @@ def rename_orders_to_backup():
     print("[1/3] orders → orders_backup 테이블 이름 변경 완료")
 
 def create_new_orders_table():
-    conn = sqlite3.connect("database.db")
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             order_code TEXT NOT NULL,
             supplier_id INTEGER NOT NULL,
             supplier_name TEXT NOT NULL,
@@ -32,7 +38,7 @@ def create_new_orders_table():
     print("[2/3] 새 orders 테이블 생성 완료 (UNIQUE 제거됨)")
 
 def copy_data_to_new_orders():
-    conn = sqlite3.connect("database.db")
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO orders (

@@ -1,9 +1,7 @@
-import psycopg2
-import psycopg2.extras
+import sqlite3
 from flask import request, render_template, redirect, url_for, jsonify, flash
 import io
 import csv
-from db import get_db_connection
 
 
 CATEGORY_DATA = {
@@ -108,16 +106,17 @@ def generate_sku(category_main, category_sub, suffix):
     if sub_code is None:
         raise ValueError("유효하지 않은 소분류입니다.")
 
-    conn = get_db_connection()
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
+    # 0001 ~ 9999까지 순차적으로 사용 가능한 번호 찾기
     for i in range(1, 10000):
-        serial = f"{i:04}"
+        serial = f"{i:04}"  # 예: 0001
         sku = f"{main_code}{sub_code}{serial}"
         if suffix in ["-S", "-P", "-B"]:
             sku += suffix
 
-        cursor.execute("SELECT 1 FROM products WHERE sku = %s", (sku,))
+        cursor.execute("SELECT 1 FROM products WHERE sku = ?", (sku,))
         if not cursor.fetchone():
             conn.close()
             return sku
@@ -126,11 +125,29 @@ def generate_sku(category_main, category_sub, suffix):
     raise ValueError("사용 가능한 SKU 번호가 없습니다.")
 
 def create_table():
-    conn = get_db_connection()
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            english_name TEXT NOT NULL,
+            category_main TEXT NOT NULL,
+            category_sub TEXT NOT NULL,
+            category_suffix TEXT,
+            barcode TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def create_table():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             sku TEXT UNIQUE NOT NULL,
             name TEXT NOT NULL,
             english_name TEXT NOT NULL,
@@ -156,9 +173,9 @@ def register_product():
         category_suffix = SUFFIX_CODE_MAP.get(category_suffix, category_suffix)
 
         # 중복 바코드 검사
-        conn = get_db_connection()
+        conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM products WHERE barcode = %s", (barcode,))
+        cursor.execute("SELECT * FROM products WHERE barcode = ?", (barcode,))
         existing = cursor.fetchall()
         conn.close()
 
@@ -181,13 +198,13 @@ def register_product():
         sku = generate_sku(category_main, category_sub, category_suffix)
 
         # 실제 등록
-        conn = get_db_connection()
+        conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO products (
                 sku, name, english_name, category_main,
                 category_sub, category_suffix, barcode
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             sku, name, english_name, category_main,
             category_sub, category_suffix, barcode
@@ -208,9 +225,10 @@ def register_product():
         }
     )
 
+
 def edit_product(product_id):
-    conn = get_db_connection()
-    conn.row_factory = psycopg2.extras.DictCursor
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     if request.method == "POST":
@@ -225,17 +243,18 @@ def edit_product(product_id):
         # DB 업데이트
         cursor.execute("""
             UPDATE products
-            SET name = %s, english_name = %s, category_main = %s, 
-                category_sub = %s, category_suffix = %s, barcode = %s
-            WHERE id = %s
+            SET name = ?, english_name = ?, category_main = ?, 
+                category_sub = ?, category_suffix = ?, barcode = ?
+            WHERE id = ?
         """, (name, english_name, category_main, category_sub, category_suffix, barcode, product_id))
         conn.commit()
         conn.close()
 
+        # 리디렉션으로 중복 제출 방지 및 메시지 표시
         return redirect(url_for("manage_products", success=f"'{name}' 수정 완료"))
 
     # GET 요청: 기존 데이터 조회
-    cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
+    cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
     product = cursor.fetchone()
     conn.close()
 
@@ -253,17 +272,19 @@ def edit_product(product_id):
             "박스상품": "-B"
         }
     )
+
 def delete_product(product_id):
-    conn = get_db_connection()
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
+    cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
     conn.commit()
     conn.close()
     return redirect(url_for("manage_products"))
 
 def view_products():
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM products ORDER BY id DESC")
     products = cursor.fetchall()
     conn.close()
@@ -274,19 +295,21 @@ def view_products():
         categories=CATEGORY_DATA,
         category_suffix=CATEGORY_SUFFIX_OPTIONS,
         suffix_code_map={
-            "세일상품": "-S",
-            "Pfand 상품": "-P",
-            "박스상품": "-B"
-        }
+                "세일상품": "-S",
+                "Pfand 상품": "-P",
+                "박스상품": "-B"
+            }
     )
+
 
 def product_search():
     query = request.args.get("query", "").strip()
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT sku, name, barcode FROM products 
-        WHERE sku ILIKE %s OR barcode ILIKE %s OR name ILIKE %s
+        WHERE sku LIKE ? OR barcode LIKE ? OR name LIKE ?
         LIMIT 10
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
     results = [dict(row) for row in cursor.fetchall()]
@@ -298,14 +321,17 @@ def product_info():
     if not identifier:
         return jsonify(results=[])
 
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
     cursor.execute("""
         SELECT sku, name, english_name, barcode
         FROM products
-        WHERE sku ILIKE %s OR barcode ILIKE %s OR name ILIKE %s
+        WHERE sku LIKE ? OR barcode LIKE ? OR name LIKE ?
         LIMIT 10
     """, (f"%{identifier}%", f"%{identifier}%", f"%{identifier}%"))
+
     rows = cursor.fetchall()
     conn.close()
 
@@ -313,8 +339,9 @@ def product_info():
     return jsonify(results=results)
 
 def manage_products():
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
     message = request.args.get("success")
 
     if request.method == "POST":
@@ -355,7 +382,7 @@ def manage_products():
                     if key not in sku_tracker:
                         cursor.execute("""
                             SELECT COUNT(*) FROM products
-                            WHERE category_main = %s AND category_sub = %s AND category_suffix = %s
+                            WHERE category_main = ? AND category_sub = ? AND category_suffix = ?
                         """, (category_main, category_sub, category_suffix))
                         count = cursor.fetchone()[0]
                         sku_tracker[key] = count + 1
@@ -367,10 +394,9 @@ def manage_products():
                     sku_tracker[key] += 1
 
                     cursor.execute("""
-                        INSERT INTO products
+                        INSERT OR IGNORE INTO products
                         (sku, name, english_name, category_main, category_sub, category_suffix, barcode)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        ON CONFLICT (sku) DO NOTHING
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     """, (sku, name, english_name, category_main, category_sub, category_suffix, barcode))
 
                     if cursor.rowcount == 0:
@@ -388,6 +414,7 @@ def manage_products():
             return redirect(url_for("manage_products"))
 
         else:
+            # 개별 등록 처리
             name = request.form.get("name")
             english_name = request.form.get("english_name")
             category_main = request.form.get("category_main")
@@ -400,10 +427,11 @@ def manage_products():
                 message = "❌ 필수 항목이 누락되었습니다."
             else:
                 category_suffix = SUFFIX_CODE_MAP.get(category_suffix_raw, category_suffix_raw)
-                cursor.execute("SELECT * FROM products WHERE barcode = %s", (barcode,))
+                cursor.execute("SELECT * FROM products WHERE barcode = ?", (barcode,))
                 existing = cursor.fetchall()
 
                 if existing and not force_submit:
+                    # 중복 확인 및 사용자 확인 요청
                     message = f"""
                     ⚠️ 동일한 바코드를 가진 제품이 이미 존재합니다: {barcode}<br><br>
                     <form method="post">
@@ -425,7 +453,7 @@ def manage_products():
                             INSERT INTO products (
                                 sku, name, english_name, category_main,
                                 category_sub, category_suffix, barcode
-                            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
                         """, (
                             sku, name, english_name, category_main,
                             category_sub, category_suffix, barcode
@@ -435,6 +463,7 @@ def manage_products():
                     except Exception as e:
                         message = f"❌ 등록 실패: {e}"
 
+    # GET 또는 POST 후 목록 조회
     cursor.execute("SELECT * FROM products ORDER BY id DESC")
     products = cursor.fetchall()
     conn.close()
