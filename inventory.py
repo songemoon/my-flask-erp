@@ -238,8 +238,8 @@ def inventory_out():
 
         cursor.execute("SELECT name, english_name FROM products WHERE sku = %s", (sku,))
         row = cursor.fetchone()
-        name = row[0] if row else "알수없음"
-        english_name = row[1] if row else "unknown"
+        name = row["name"] if row else "알수없음"
+        english_name = row["english_name"] if row else "unknown"
 
         cursor.execute("""
             INSERT INTO inventory_movement (
@@ -325,7 +325,7 @@ def search_inventory():
     cursor.execute("SELECT sku, order_number FROM inventory")
     received_rows = cursor.fetchall()
 
-    received_set = set((row[0], row[1]) for row in received_rows)
+    received_set = set((row["sku"], row["order_number"]) for row in received_rows)
 
     pending_items = []
     for row in all_orders:
