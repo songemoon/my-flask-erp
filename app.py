@@ -335,15 +335,15 @@ def api_product_info():
 from schedule_routes import schedule_bp
 app.register_blueprint(schedule_bp)
 
-if __name__ == "__main__":
-    create_table()
-    create_inventory_table()
-    create_inventory_movement_table()
-    create_supplier_table()
-    create_user_table()
-    create_cost_history_table()
-    create_order_table()
-    create_sales_volume_table()
-    create_real_stock_table()
-    #add_english_name_column()
-    app.run(debug=True)
+#if __name__ == "__main__":
+#    create_table()
+#    create_inventory_table()
+#    create_inventory_movement_table()
+#    create_supplier_table()
+#    create_user_table()
+#    create_cost_history_table()
+#    create_order_table()
+#    create_sales_volume_table()
+#    create_real_stock_table()
+#    add_english_name_column()
+    #app.run(debug=True)
