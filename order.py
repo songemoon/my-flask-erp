@@ -53,7 +53,7 @@ def new_order():
             """, (
                 order_code, supplier_id, supplier_name,
                 sku, name, qty,
-                inquiry, order_date, staff_name
+                inquiry, order_date, staff_name, staff_english_name  # 여기에 추가
             ))
 
         conn.commit()
@@ -183,12 +183,12 @@ def edit_order(order_code):
                 INSERT INTO orders (
                     order_code, supplier_id, supplier_name,
                     product_sku, product_name, quantity,
-                    inquiry, order_date, staff_name
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    inquiry, order_date, staff_name, staff_english_name
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_code, supplier_id, supplier_name,
                 sku, name, qty,
-                inquiry, order_date, staff_name
+                inquiry, order_date, staff_name, staff_english_name  # 여기에 추가
             ))
 
         conn.commit()
