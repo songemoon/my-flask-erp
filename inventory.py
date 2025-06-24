@@ -124,7 +124,7 @@ def inventory_in():
             action="in",
             message=f"✅ 제품 {name} 입고 완료. 총 수량: {total_qty}개",
             identifier=identifier,
-            product={"name": name, "english_name": english_name}
+            product={"sku": sku, "name": name, "english_name": english_name}
         )
 
     return render_template("manage_inventory.html", action="in")
