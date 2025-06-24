@@ -377,6 +377,75 @@ def health_db():
     except Exception as e:
         return jsonify(status="error", detail=str(e)), 500
 
+@app.route('/orders/plan_print/<order_code>')
+def print_order_plan(order_code):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # 1. 주문 항목 조회
+    cursor.execute("""
+        SELECT o.product_sku, o.product_name, o.quantity
+        FROM orders o
+        WHERE o.order_code = %s
+    """, (order_code,))
+    products = cursor.fetchall()
+
+    # 2. 실재고 정보 조회 (딕셔너리로 매핑)
+    cursor.execute("""
+        SELECT sku, SUM(quantity) AS stock_qty
+        FROM real_stock
+        GROUP BY sku
+    """)
+    stock_rows = cursor.fetchall()
+    stock_map = {row["sku"]: row["stock_qty"] for row in stock_rows}
+
+    # 3. 최근 4개월 평균 판매량 조회
+    cursor.execute("""
+        SELECT sku, year, month, quantity
+        FROM sales_volume
+    """)
+    sales_rows = cursor.fetchall()
+    from datetime import date
+    from collections import defaultdict
+    from dateutil.relativedelta import relativedelta
+
+    # 최근 4개월 구하기
+    today = date.today()
+    recent_4_months = [(today - relativedelta(months=i)).strftime("%Y-%m") for i in range(4)]
+
+    sales_by_sku = defaultdict(lambda: defaultdict(int))
+    for row in sales_rows:
+        ym = f"{row['year']:04d}-{row['month']:02d}"
+        if ym in recent_4_months:
+            sales_by_sku[row["sku"]][ym] += row["quantity"]
+
+    avg_sales_map = {}
+    for sku, sales_dict in sales_by_sku.items():
+        values = [sales_dict.get(m, 0) for m in recent_4_months]
+        avg_sales_map[sku] = round(sum(values) / 4, 2)
+
+    conn.close()
+
+    # 4. 데이터 병합
+    product_data = []
+    for p in products:
+        sku = p["product_sku"]
+        product_data.append({
+            "sku": sku,
+            "name": p["product_name"],
+            "quantity": p["quantity"],
+            "real_stock": stock_map.get(sku, 0),
+            "avg_sales": avg_sales_map.get(sku, 0)
+        })
+
+    return render_template(
+        "order_plan_print.html",
+        order_code=order_code,
+        product_data=product_data
+    )
+
+
+
 
 @app.route("/init-db")
 def init_db():
