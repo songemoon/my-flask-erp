@@ -61,6 +61,8 @@
             padding: 25px 15px !important;
             display: flex !important;
             flex-direction: column !important;
+            height: 100% !important;              /* ✅ 높이 설정 */
+            overflow-y: auto !important;          /* ✅ 스크롤 추가 */
         }
 
         nav h2 {
@@ -105,7 +107,7 @@
             font-weight: 700 !important;
         }
         nav .menu-section {
-            margin-bottom: 24px; /* 섹션 간 간격 추가 */
+            margin-bottom: 24px;
         }
 
         main {
@@ -153,16 +155,15 @@
             <span>ERP 시스템</span>
         </div>
         <div class="user-info">
-                {% if session.user %}
-                    <span>{{ session.user.name }}님</span>
-                    <a href="{{ url_for('change_password_route') }}" style="margin-left:12px; font-size:0.9rem; color:#808080;">비밀번호 변경</a>
-                    <a href="{{ url_for('logout_route') }}" style="margin-left:16px; color:#B22222;">로그아웃</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}">로그인</a>
-                {% endif %}
-            </div>
-        </header>
-
+            {% if session.user %}
+                <span>{{ session.user.name }}님</span>
+                <a href="{{ url_for('change_password_route') }}" style="margin-left:12px; font-size:0.9rem; color:#808080;">비밀번호 변경</a>
+                <a href="{{ url_for('logout_route') }}" style="margin-left:16px; color:#B22222;">로그아웃</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">로그인</a>
+            {% endif %}
+        </div>
+    </header>
 
     <div class="layout">
         <nav>
