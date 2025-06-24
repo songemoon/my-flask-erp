@@ -95,7 +95,7 @@ def delete_test_data():
     
     try:
         # 삭제 순서 중요 (자식 테이블부터)
-        tables = ["sales_volume", "schedule"]
+        tables = ["sales_volume", "schedules"]
         for table in tables:
             cursor.execute(f"DELETE FROM {table};")
         conn.commit()
