@@ -127,6 +127,10 @@
         <button type="button" class="btn-edit">✏️ 수정하기</button>
     </a>
 
+    <a href="{{ url_for('print_order_plan', order_code=order_code) }}" target="_blank">
+        <button type="button" class="btn-print">📝 발주계획서 인쇄</button>
+    </a>
+
     <a href="{{ url_for('print_order', order_code=order_code) }}" target="_blank">
         <button type="button" class="btn-print">📄 인쇄하기</button>
     </a>
