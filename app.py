@@ -88,6 +88,17 @@ app.config.from_object(Config)
 app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
 
+conn = get_db_connection()
+cursor = conn.cursor()
+
+tables = ["inventory_movement"]
+for table in tables:
+    cursor.execute(f"DELETE FROM {table};")
+
+conn.commit()
+conn.close()
+
+
 @app.route("/")
 def home():
     user = session.get("user")
