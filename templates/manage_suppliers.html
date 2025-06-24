@@ -73,6 +73,19 @@ button {
 button:hover {
     background-color: var(--primary-hover);
 }
+.action-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+.action-cell form {
+  display: inline-block; 
+  margin: 0; 
+  padding: 0;
+}
+
+.action-cell button {
+  padding: 4px 8px;
+}
 .alert {
     margin-bottom: 16px;
     padding: 12px 16px;
@@ -116,8 +129,7 @@ tr:nth-child(even) {
 
         {% if success %}
         <div class="alert alert-success">{{ success }}</div>
-        {% endif %}
-        {% if error %}
+        {% elif error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
 
@@ -155,7 +167,7 @@ tr:nth-child(even) {
                     <td>{{ supplier.code }}</td>
                     <td>{{ supplier.name }}</td>
                     <td>{{ supplier.country_code }}</td>
-                    <td>
+                    <td class="action-cell">
                         <form method="POST" action="{{ url_for('delete_supplier', supplier_id=supplier.id) }}" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                             <button type="submit" style="background:none;border:none;color:#c0392b;cursor:pointer;">삭제</button>
                         </form>

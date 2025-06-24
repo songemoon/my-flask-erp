@@ -83,4 +83,11 @@ def delete_supplier(supplier_id):
     cursor.execute("DELETE FROM suppliers WHERE id = %s", (supplier_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for("list_suppliers"))
+    # 삭제 후에는 성공 메시지와 error 파라미터 초기화
+    return redirect(
+        url_for(
+            "manage_suppliers",
+            success="✅ 거래처가 성공적으로 삭제되었습니다.",
+            error=None
+        )
+    )
