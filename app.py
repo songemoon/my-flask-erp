@@ -88,20 +88,6 @@ app.config.from_object(Config)
 app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
 
-@app.route("/add-staff-english-name-column")
-def add_column():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS staff_english_name TEXT;")
-        conn.commit()
-        return "✅ staff_english_name 컬럼 추가 완료"
-    except Exception as e:
-        return f"❌ 오류: {e}"
-    finally:
-        conn.close()
-
-
 @app.route("/")
 def home():
     user = session.get("user")
