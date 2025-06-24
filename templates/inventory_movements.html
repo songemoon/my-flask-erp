@@ -129,7 +129,7 @@
 
 <hr>
 
-<table>
+<table class="sortable">
     <thead>
         <tr>
             <th>날짜</th>
@@ -149,10 +149,10 @@
     <tbody>
         {% for row in movements %}
         <tr>
-            <td>{{ row['timestamp'] }}</td>
+            <td>{{ row['timestamp'].strftime('%Y-%m-%d %H:%M:%S') }}</td>
             <td>{{ row['sku'] }}</td>
             <td>{{ row['product_name'] }}</td>
-            <td>{{ row['product_name_en'] }}</td>
+            <td>{{ row['product_name_en'] or '-' }}</td>
             <td>{{ row['movement_type'] }}</td>
             <td>{{ row['quantity_box'] }}</td>
             <td>{{ row['quantity_piece'] }}</td>
@@ -165,4 +165,28 @@
         {% endfor %}
     </tbody>
 </table>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".sortable th").forEach(header => {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      const table = header.closest("table");
+      const index = Array.from(header.parentElement.children).indexOf(header);
+      const ascending = !header.classList.contains("asc");
+      table.querySelectorAll("th").forEach(h => h.classList.remove("asc","desc"));
+      header.classList.add(ascending?"asc":"desc");
+      const rows = Array.from(table.tBodies[0].rows);
+      rows.sort((a,b) => {
+        const aText = a.cells[index].textContent.trim();
+        const bText = b.cells[index].textContent.trim();
+        return ascending
+          ? aText.localeCompare(bText,'ko')
+          : bText.localeCompare(aText,'ko');
+      });
+      rows.forEach(r=>table.tBodies[0].appendChild(r));
+    });
+  });
+});
+</script>
 {% endblock %}

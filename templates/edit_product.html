@@ -75,13 +75,13 @@
     <!-- 제품명 -->
     <div>
         <label>제품명</label>
-        <input type="text" name="name" value="{{ product[2] }}" required>
+        <input type="text" name="name" value="{{ product.name }}" required>
     </div>
 
     <!-- 영문명 -->
     <div>
         <label>영문명</label>
-        <input type="text" name="english_name" value="{{ product[3] }}" required>
+        <input type="text" name="english_name" value="{{ product.english_name }}" required>
     </div>
 
     <!-- 카테고리 대분류 -->
@@ -89,7 +89,7 @@
         <label>카테고리 대분류</label>
         <select name="category_main" id="category_main" required onchange="updateSubcategories()">
             {% for main in categories %}
-                <option value="{{ main }}" {% if main == product[4] %}selected{% endif %}>{{ main }}</option>
+                <option value="{{ main }}" {% if main == product.category_main %}selected{% endif %}>{{ main }}</option>
             {% endfor %}
         </select>
     </div>
@@ -141,7 +141,7 @@
             const option = document.createElement("option");
             option.value = subName;
             option.text = subName;
-            if (subName === "{{ product[5] }}") {
+            if (subName === "{{ product.category_sub }}") {
                 option.selected = true;
             }
             subSelect.appendChild(option);
