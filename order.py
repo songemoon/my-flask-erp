@@ -36,9 +36,10 @@ def new_order():
 
         cursor.execute("SELECT name FROM suppliers WHERE id = %s", (supplier_id,))
         row = cursor.fetchone()
-        if not row:
-            return "거래처를 찾을 수 없습니다.", 400
-        supplier_name = row[0]
+        if row:
+            supplier_name = row["name"]
+        else:
+            supplier_name = "알수없음"
 
         inquiry = request.form.get("inquiry", "")
 

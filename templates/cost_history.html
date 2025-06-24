@@ -150,7 +150,7 @@
                                 <td>{{ row.unit_price }}</td>
                                 <td>{{ row.common_unit_cost }}</td>
                                 <td class="final-cost">{{ row.final_cost }}</td>
-                                <td>{{ row.timestamp[:10] }}</td>
+                                <td>{{ row['timestamp'].strftime('%Y-%m-%d') }}</td>
                                 <td>
                                     <a href="{{ url_for('register_cost', order_code=row.order_code) }}">🔁 수정</a>
                                 </td>
