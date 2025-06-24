@@ -99,10 +99,9 @@ def login():
         user = authenticate_user(request.form["username"], request.form["password"])
         if user:
             session["user"] = {
-                "id": user[0],
-                "username": user[1],
-                "name": user[3],
-                "english_name": user[4],
+                "id":       user["id"],
+                "username": user["username"],
+                "name":     user["name"],
             }
             next_page = request.args.get("next")
             return redirect(next_page or url_for("home"))
@@ -110,6 +109,7 @@ def login():
             error = "아이디 또는 비밀번호가 잘못되었습니다."
             return render_template("login.html", error=error)
     return render_template("login.html")
+
 
 def logout():
     session.clear()
