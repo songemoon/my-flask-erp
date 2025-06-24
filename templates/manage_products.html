@@ -210,7 +210,9 @@ a:hover {
 <hr>
 
 <h2>✏️ 제품 등록</h2>
-
+<div style="max-width: 900px; margin: 0 auto 20px;">
+  <input type="text" id="productSearch" placeholder="제품명, SKU 또는 바코드 검색" style="width: 100%; padding: 10px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 6px;">
+</div>
 <div class="product-layout">
   <div class="product-form-section">
     <form method="post" action="{{ url_for('manage_products') }}">
@@ -333,17 +335,40 @@ document.addEventListener("DOMContentLoaded", function () {
     subCategorySelect.innerHTML = "";
 
     Object.keys(subcategories).forEach(sub => {
-        const option = document.createElement("option");
-        option.value = sub;
-        option.textContent = sub;
-        subCategorySelect.appendChild(option);
+      const option = document.createElement("option");
+      option.value = sub;
+      option.textContent = sub;
+      subCategorySelect.appendChild(option);
     });
-
   }
 
   mainCategorySelect.addEventListener("change", updateSubcategories);
   updateSubcategories(); // 페이지 로드시 초기 소분류 설정
+
+  // 🔍 실시간 검색 필터링
+  const searchInput = document.getElementById("productSearch");
+
+  searchInput.addEventListener("input", function () {
+    const keyword = this.value.trim().toLowerCase();
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+      const name = row.children[1].innerText.toLowerCase();
+      const englishName = row.children[2].innerText.toLowerCase();
+      const sku = row.children[0].innerText.toLowerCase();
+      const barcode = row.children[6].innerText.toLowerCase();
+
+      const visible =
+        name.includes(keyword) ||
+        englishName.includes(keyword) ||
+        sku.includes(keyword) ||
+        barcode.includes(keyword);
+
+      row.style.display = visible ? "" : "none";
+    });
+  });
 });
 </script>
+
 
 {% endblock %}
