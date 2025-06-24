@@ -81,7 +81,7 @@ from auth import (
     admin_user_manage,
     change_password
 )
-from schedule_routes import (create_schedule_table)
+from schedule_routes import create_schedule_table
 
 app = Flask(__name__)
 app.config.from_object(Config)
