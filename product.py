@@ -327,7 +327,7 @@ def manage_products():
             try:
                 import io, csv
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
-                reader = csv.DictReader(stream)
+                reader = csv.DictReader(stream, delimiter=';')
                 sku_tracker = {}
 
                 for row in reader:

@@ -31,7 +31,7 @@ def upload_real_stock():
         else:
             try:
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
-                reader = csv.DictReader(stream)
+                reader = csv.DictReader(stream, ㅇ디ㅑㅡㅑㅅㄷㄱ=';')
 
                 conn = get_db_connection()
                 cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
