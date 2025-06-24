@@ -3,6 +3,47 @@ import psycopg2.extras
 from db import get_db_connection
 from flask import request, render_template, redirect, url_for
 
+def create_cost_expense_table():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cost_expense (
+            id SERIAL PRIMARY KEY,
+            order_code TEXT NOT NULL,
+            expense_name TEXT NOT NULL,
+            expense_amount REAL NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def create_cost_history_table():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cost_history (
+            id SERIAL PRIMARY KEY,
+            order_code TEXT NOT NULL,
+            sku TEXT NOT NULL,
+            quantity INTEGER NOT NULL,
+            unit_price REAL NOT NULL,
+            common_unit_cost REAL NOT NULL,
+            final_cost REAL NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+    
+
+
+
+def initialize_cost_expense_table():
+    create_cost_expense_table()
+
+
+
 def register_cost(order_code):
     if request.method == "POST":
         # 공통비용 계산
@@ -41,7 +82,6 @@ def register_cost(order_code):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("DELETE FROM cost_history WHERE order_code = %s", (order_code,))
-        cursor.execute("DELETE FROM cost_expense WHERE order_code = %s", (order_code,))
 
         for item in items:
             final_cost = round(item["unit_price"] + common_unit_cost, 4)
@@ -137,38 +177,3 @@ def view_cost_history():
 
     return render_template("cost_history.html", query=query, grouped=grouped)
 
-def create_cost_history_table():
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cost_history (
-            id SERIAL PRIMARY KEY,
-            order_code TEXT NOT NULL,
-            sku TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            unit_price REAL NOT NULL,
-            common_unit_cost REAL NOT NULL,
-            final_cost REAL NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def create_cost_expense_table():
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cost_expense (
-            id SERIAL PRIMARY KEY,
-            order_code TEXT NOT NULL,
-            expense_name TEXT NOT NULL,
-            expense_amount REAL NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def initialize_cost_expense_table():
-    create_cost_expense_table()

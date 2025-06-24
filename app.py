@@ -368,6 +368,8 @@ def init_db():
     create_sales_volume_table()
     create_real_stock_table()
     create_schedule_table()
+    create_cost_expense_table()
+    initialize_cost_expense_table()
     return "✅ DB 초기화가 완료되었습니다."
 
 
