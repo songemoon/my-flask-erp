@@ -92,7 +92,10 @@ def inventory_in():
                 products=products
             )
 
-        sku, name, english_name, barcode = product
+        sku = product["sku"]
+        name = product["name"]
+        english_name = product["english_name"]
+        barcode = product["barcode"]
         total_qty = box_qty * unit_per_box + piece_qty
 
         cursor.execute("""
