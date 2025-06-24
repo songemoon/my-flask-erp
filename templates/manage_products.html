@@ -332,12 +332,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const subcategories = categoryData[selectedMain]?.sub || [];
     subCategorySelect.innerHTML = "";
 
-    subcategories.forEach(sub => {
-      const option = document.createElement("option");
-      option.value = sub;
-      option.textContent = sub;
-      subCategorySelect.appendChild(option);
+    Object.keys(subcategories).forEach(sub => {
+        const option = document.createElement("option");
+        option.value = sub;
+        option.textContent = sub;
+        subCategorySelect.appendChild(option);
     });
+
   }
 
   mainCategorySelect.addEventListener("change", updateSubcategories);
