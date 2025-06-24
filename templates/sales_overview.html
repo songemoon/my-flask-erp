@@ -10,7 +10,7 @@
     <button type="submit">검색</button>
 </form>
 
-<div style="overflow-x: auto;">
+<div class="table-wrapper">
     <table id="sales-table" class="wide-table">
         <thead>
             <tr>
@@ -83,7 +83,7 @@
 
     .wide-table {
         width: 100%;
-        min-width: 1200px;
+        min-width: 1000px;
         table-layout: auto; 
         border-collapse: collapse;
         border-radius: 10px;
@@ -139,6 +139,10 @@
         content: " ▼";
         font-size: 0.8rem;
         color: #888;
+    }
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
     }
 </style>
 
