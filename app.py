@@ -267,7 +267,7 @@ def manage_suppliers():
     return supplier_manage_suppliers()
 
 
-@app.route("/suppliers/delete/<int:supplier_id>", methods="[POST]")
+@app.route("/suppliers/delete/<int:supplier_id>", methods=["POST"])
 @login_required
 def delete_supplier(supplier_id):
     return supplier_delete_supplier(supplier_id)
