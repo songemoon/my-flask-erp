@@ -177,6 +177,7 @@ def edit_order(order_code):
         cursor.execute("DELETE FROM orders WHERE order_code = %s", (order_code,))
         order_date = datetime.today().strftime("%Y-%m-%d")
         staff_name = user["name"]
+        staff_english_name = user["english_name",""]
 
         for sku, name, qty in products:
             cursor.execute("""
