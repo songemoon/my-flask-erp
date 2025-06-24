@@ -439,12 +439,13 @@ def print_order_plan(order_code):
         })
 
     return render_template(
-        "order_plan_print.html",
-        order_code=order_code,
-        product_data=product_data
-    )
-
-
+    "order_plan_print.html",
+    order_code=order_code,
+    order_date=order["order_date"],         # 주문일자
+    staff_name=order["staff_name"],         # 담당자
+    supplier_name=order["supplier_name"],   # 거래처명
+    product_data=product_data
+)
 
 
 @app.route("/init-db")
