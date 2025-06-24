@@ -102,6 +102,7 @@ def login():
                 "id":       user["id"],
                 "username": user["username"],
                 "name":     user["name"],
+                "english_name":    user["english_name"]
             }
             next_page = request.args.get("next")
             return redirect(next_page or url_for("home"))
