@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>발주계획서</title>
+  <style>
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      margin: 40px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .info {
+      margin-bottom: 30px;
+    }
+    .info div {
+      margin: 5px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .footer-note {
+      text-align: right;
+      font-size: 0.9em;
+      color: #666;
+    }
+    @media print {
+      body {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>발주계획서</h1>
+
+  <div class="info">
+    <div><strong>발주번호:</strong> {{ order_code }}</div>
+    <div><strong>발주일자:</strong> {{ order_date }}</div>
+    <div><strong>담당자명:</strong> {{ staff_name }}</div>
+    <div><strong>거래처:</strong> {{ supplier_name }}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>제품명</th>
+        <th>주문수량</th>
+        <th>실재고</th>
+        <th>평균판매량<br>(최근 4개월)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in product_data %}
+      <tr>
+        <td>{{ item.sku }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.real_stock }}</td>
+        <td>{{ item.avg_sales }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer-note">
+    ※ 본 문서는 제품별 재고현황과 판매데이터를 기반으로 작성된 발주계획서입니다.
+  </div>
+
+</body>
+</html>
