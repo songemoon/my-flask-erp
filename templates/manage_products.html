@@ -199,12 +199,12 @@ a:hover {
 {% endwith %}
 
 <form method="POST" enctype="multipart/form-data">
-    <label>CSV 파일 선택</label>
-    <input type="file" name="csv_file" accept=".csv" required>
-    <button type="submit">CSV 업로드</button>
-    <p class="hint">
-        CSV 헤더는 반드시 <b>제품명, 영문명, 대분류, 소분류, 접미사, 바코드</b> 이어야 합니다.
-    </p>
+  <label>CSV 파일 선택</label>
+  <input type="file" name="csv_file" accept=".csv" required>
+  <button type="submit">CSV 업로드</button>
+  <p class="hint">
+    CSV 헤더는 반드시 <b>제품명, 영문명, 대분류, 소분류, 접미사, 바코드</b> 이어야 합니다.
+  </p>
 </form>
 
 <hr>
@@ -212,147 +212,137 @@ a:hover {
 <h2>✏️ 제품 등록</h2>
 
 <div class="product-layout">
-    <div class="product-form-section">
-        <form method="post" action="{{ url_for('manage_products') }}">
-            <label>제품명</label>
-            <input type="text" name="name" required>
+  <div class="product-form-section">
+    <form method="post" action="{{ url_for('manage_products') }}">
+      <label>제품명</label>
+      <input type="text" name="name" required>
 
-            <label>영문명</label>
-            <input type="text" name="english_name" required>
+      <label>영문명</label>
+      <input type="text" name="english_name" required>
 
-            <label>대분류</label>
-            <select id="category_main" name="category_main" onchange="updateSubcategories()" required>
-                {% for main in categories %}
-                    <option value="{{ main }}">{{ main }}</option>
-                {% endfor %}
-            </select>
+      <label>대분류</label>
+      <select id="category_main" name="category_main" required>
+        {% for main in categories %}
+          <option value="{{ main }}">{{ main }}</option>
+        {% endfor %}
+      </select>
 
-            <label>소분류</label>
-            <select id="category_sub" name="category_sub" required>
-                {% set first_main = categories|list|first %}
-                {% for sub in categories[first_main]['sub'] %}
-                    <option value="{{ sub }}">{{ sub }}</option>
-                {% endfor %}
-            </select>
+      <label>소분류</label>
+      <select id="category_sub" name="category_sub" required></select>
 
-            <div class="radio-group">
-                <label class="radio-title">접미코드 (선택)</label>
-                <div class="radio-options">
-                    {% for suffix in category_suffix %}
-                        <label>
-                            <input type="radio" name="category_suffix" value="{{ suffix_code_map[suffix] }}">
-                            {{ suffix }}
-                        </label>
-                    {% endfor %}
-                    <label>
-                        <input type="radio" name="category_suffix" value="" checked> 없음
-                    </label>
-                </div>
-            </div>
+      <div class="radio-group">
+        <label class="radio-title">접미코드 (선택)</label>
+        <div class="radio-options">
+          {% for suffix in category_suffix %}
+            <label>
+              <input type="radio" name="category_suffix" value="{{ suffix_code_map[suffix] }}">
+              {{ suffix }}
+            </label>
+          {% endfor %}
+          <label>
+            <input type="radio" name="category_suffix" value="" checked> 없음
+          </label>
+        </div>
+      </div>
 
-            <label>바코드</label>
-            <input type="text" name="barcode">
+      <label>바코드</label>
+      <input type="text" name="barcode">
 
-            <button type="submit">등록</button>
-        </form>
-    </div>
+      <button type="submit">등록</button>
+    </form>
+  </div>
 
-    <div class="product-table-section">
-        <table id="productTable">
-            <thead>
-                <tr>
-                    <th>SKU</th>
-                    <th>제품명</th>
-                    <th>영문명</th>
-                    <th>대분류</th>
-                    <th>소분류</th>
-                    <th>기타</th>
-                    <th>바코드</th>
-                    <th>수정</th>
-                    <th>삭제</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for p in products %}
-            <tr>
-                <td>{{ p.sku }}</td>
-                <td>{{ p.name }}</td>
-                <td>{{ p.english_name }}</td>
-                <td>{{ p.category_main }}</td>
-                <td>{{ p.category_sub }}</td>
-                <td>{{ p.category_suffix }}</td>
-                <td>{{ p.barcode }}</td>
-                <td><a href="{{ url_for('edit_product', product_id=p.id) }}">수정</a></td>
-                <td><a href="{{ url_for('delete_product', product_id=p.id) }}" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a></td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div class="product-table-section">
+    <table id="productTable">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>제품명</th>
+          <th>영문명</th>
+          <th>대분류</th>
+          <th>소분류</th>
+          <th>기타</th>
+          <th>바코드</th>
+          <th>수정</th>
+          <th>삭제</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>{{ p.sku }}</td>
+          <td>{{ p.name }}</td>
+          <td>{{ p.english_name }}</td>
+          <td>{{ p.category_main }}</td>
+          <td>{{ p.category_sub }}</td>
+          <td>{{ p.category_suffix }}</td>
+          <td>{{ p.barcode }}</td>
+          <td><a href="{{ url_for('edit_product', product_id=p.id) }}">수정</a></td>
+          <td><a href="{{ url_for('delete_product', product_id=p.id) }}" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // 테이블 정렬 기능
-    const table = document.getElementById("productTable");
-    const headers = table.querySelectorAll("th");
-    let sortDirection = {};
+  // 테이블 정렬
+  const table = document.getElementById("productTable");
+  const headers = table.querySelectorAll("th");
+  let sortDirection = {};
 
-    headers.forEach((header, index) => {
-        header.addEventListener("click", () => {
-            const rows = Array.from(table.querySelectorAll("tbody tr"));
-            const asc = !sortDirection[index];
+  headers.forEach((header, index) => {
+    header.addEventListener("click", () => {
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      const asc = !sortDirection[index];
 
-            rows.sort((a, b) => {
-                const cellA = a.children[index].innerText.trim();
-                const cellB = b.children[index].innerText.trim();
-                const valA = isNaN(cellA) ? cellA : parseFloat(cellA);
-                const valB = isNaN(cellB) ? cellB : parseFloat(cellB);
-                return asc
-                    ? valA > valB ? 1 : valA < valB ? -1 : 0
-                    : valA < valB ? 1 : valA > valB ? -1 : 0;
-            });
+      rows.sort((a, b) => {
+        const cellA = a.children[index].innerText.trim();
+        const cellB = b.children[index].innerText.trim();
+        const valA = isNaN(cellA) ? cellA : parseFloat(cellA);
+        const valB = isNaN(cellB) ? cellB : parseFloat(cellB);
+        return asc
+          ? valA > valB ? 1 : valA < valB ? -1 : 0
+          : valA < valB ? 1 : valA > valB ? -1 : 0;
+      });
 
-            const tbody = table.querySelector("tbody");
-            rows.forEach(row => tbody.appendChild(row));
-            sortDirection = {};
-            sortDirection[index] = asc;
+      const tbody = table.querySelector("tbody");
+      rows.forEach(row => tbody.appendChild(row));
+      sortDirection = {};
+      sortDirection[index] = asc;
 
-            headers.forEach(h => {
-                h.innerText = h.innerText.replace(/[\u25B2\u25BC]/g, '').trim();
-            });
+      headers.forEach(h => {
+        h.innerText = h.innerText.replace(/[\u25B2\u25BC]/g, '').trim();
+      });
 
-            const arrow = asc ? " ▲" : " ▼";
-            headers[index].innerText = headers[index].innerText + arrow;
-        });
+      const arrow = asc ? " ▲" : " ▼";
+      headers[index].innerText += arrow;
     });
+  });
 
-    // 대분류-소분류 연동
-    const categoryData = {{ categories | tojson | safe }};
-    const subCategorySelect = document.getElementById("category_sub");
-    const mainCategorySelect = document.getElementById("category_main");
+  // 대분류-소분류 연동
+  const categoryData = {{ categories | tojson | safe }};
+  const subCategorySelect = document.getElementById("category_sub");
+  const mainCategorySelect = document.getElementById("category_main");
 
-    function updateSubcategories() {
-        const selectedMain = mainCategorySelect.value;
-        const subcategories = categoryData[selectedMain]?.sub || [];
+  function updateSubcategories() {
+    const selectedMain = mainCategorySelect.value;
+    const subcategories = categoryData[selectedMain]?.sub || [];
+    subCategorySelect.innerHTML = "";
 
-        subCategorySelect.innerHTML = "";
+    subcategories.forEach(sub => {
+      const option = document.createElement("option");
+      option.value = sub;
+      option.textContent = sub;
+      subCategorySelect.appendChild(option);
+    });
+  }
 
-        subcategories.forEach(sub => {
-            const option = document.createElement("option");
-            option.value = sub;
-            option.textContent = sub;
-            subCategorySelect.appendChild(option);
-        });
-    }
-
-    // 초기화
-    updateSubcategories();
-
-    // 이벤트 연결 (혹시 안 되었을 경우 대비)
-    mainCategorySelect.addEventListener("change", updateSubcategories);
+  mainCategorySelect.addEventListener("change", updateSubcategories);
+  updateSubcategories(); // 페이지 로드시 초기 소분류 설정
 });
 </script>
-
-
 
 {% endblock %}

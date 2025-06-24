@@ -137,15 +137,15 @@
         const subItems = categoryData[main]?.sub || {};
         subSelect.innerHTML = "";
 
-        for (const subName in subItems) {
+        subItems.forEach(function(subName) {
             const option = document.createElement("option");
             option.value = subName;
-            option.text = subName;
+            option.textContent = subName;
             if (subName === "{{ product.category_sub }}") {
                 option.selected = true;
             }
             subSelect.appendChild(option);
-        }
+        });
     }
 
     window.onload = updateSubcategories;
