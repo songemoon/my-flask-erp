@@ -129,25 +129,37 @@
 </form>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
     const categoryData = {{ categories | tojson | safe }};
-    const subSelect = document.getElementById("category_sub");
+    const mainCategorySelect = document.getElementById("category_main");
+    const subCategorySelect = document.getElementById("category_sub");
 
-    function updateSubcategories() {
-        const main = document.getElementById("category_main").value;
-        const subItems = categoryData[main]?.sub || {};
-        subSelect.innerHTML = "";
+    function updateSubcategories(selected = "") {
+        const selectedMain = mainCategorySelect.value;
+        const subDict = categoryData[selectedMain]?.sub || {};
+        subCategorySelect.innerHTML = "";
 
-        subItems.forEach(function(subName) {
+        Object.keys(subDict).forEach(sub => {
             const option = document.createElement("option");
-            option.value = subName;
-            option.textContent = subName;
-            if (subName === "{{ product.category_sub }}") {
-                option.selected = true;
-            }
-            subSelect.appendChild(option);
+            option.value = sub;
+            option.textContent = sub;
+            if (sub === selected) option.selected = true;
+            subCategorySelect.appendChild(option);
         });
     }
 
-    window.onload = updateSubcategories;
+    // 등록 페이지: 기본값 없음
+    {% if product is not defined %}
+    updateSubcategories();
+    {% else %}
+    // 수정 페이지: 기존 소분류 적용
+    updateSubcategories("{{ product.category_sub }}");
+    {% endif %}
+
+    mainCategorySelect.addEventListener("change", function () {
+        updateSubcategories();
+    });
+});
 </script>
+
 {% endblock %}
