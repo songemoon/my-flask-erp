@@ -290,9 +290,9 @@ a:hover {
         </table>
     </div>
 </div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // 테이블 정렬 기능
     const table = document.getElementById("productTable");
     const headers = table.querySelectorAll("th");
     let sortDirection = {};
@@ -305,10 +305,8 @@ document.addEventListener("DOMContentLoaded", function () {
             rows.sort((a, b) => {
                 const cellA = a.children[index].innerText.trim();
                 const cellB = b.children[index].innerText.trim();
-
                 const valA = isNaN(cellA) ? cellA : parseFloat(cellA);
                 const valB = isNaN(cellB) ? cellB : parseFloat(cellB);
-
                 return asc
                     ? valA > valB ? 1 : valA < valB ? -1 : 0
                     : valA < valB ? 1 : valA > valB ? -1 : 0;
@@ -327,7 +325,34 @@ document.addEventListener("DOMContentLoaded", function () {
             headers[index].innerText = headers[index].innerText + arrow;
         });
     });
+
+    // 대분류-소분류 연동
+    const categoryData = {{ categories | tojson }};
+    const subCategorySelect = document.getElementById("category_sub");
+    const mainCategorySelect = document.getElementById("category_main");
+
+    function updateSubcategories() {
+        const selectedMain = mainCategorySelect.value;
+        const subcategories = categoryData[selectedMain]?.sub || [];
+
+        subCategorySelect.innerHTML = "";
+
+        subcategories.forEach(sub => {
+            const option = document.createElement("option");
+            option.value = sub;
+            option.textContent = sub;
+            subCategorySelect.appendChild(option);
+        });
+    }
+
+    // 초기화
+    updateSubcategories();
+
+    // 이벤트 연결 (혹시 안 되었을 경우 대비)
+    mainCategorySelect.addEventListener("change", updateSubcategories);
 });
 </script>
+
+
 
 {% endblock %}
