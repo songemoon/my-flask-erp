@@ -146,6 +146,7 @@ tr:nth-child(even) {
                     <th>코드</th>
                     <th>이름</th>
                     <th>국가 코드</th>
+                    <th>삭제</th>
                 </tr>
             </thead>
             <tbody>
@@ -154,9 +155,14 @@ tr:nth-child(even) {
                     <td>{{ supplier.code }}</td>
                     <td>{{ supplier.name }}</td>
                     <td>{{ supplier.country_code }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_supplier', supplier_id=supplier.id) }}" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                            <button type="submit" style="background:none;border:none;color:#c0392b;cursor:pointer;">삭제</button>
+                        </form>
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="3" style="padding:20px; color:#666;">등록된 거래처가 없습니다.</td></tr>
+                <tr><td colspan="4" style="padding:20px; color:#666;">등록된 거래처가 없습니다.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

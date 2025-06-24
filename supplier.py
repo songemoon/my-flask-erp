@@ -65,13 +65,16 @@ def create_supplier_table():
 def generate_supplier_code(country_code):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("""
-        SELECT COUNT(*) FROM suppliers WHERE country_code = %s
-    """, (country_code,))
-    count = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT COUNT(*) AS cnt FROM suppliers WHERE country_code = %s",
+        (country_code,)
+    )
+    row = cursor.fetchone()
+    count = row["cnt"]  # 별칭 그대로 소문자 'cnt' 사용
     conn.close()
 
     return f"{country_code}{count + 1:02d}"  # 예: KR01, KR02
+
 
 
 def delete_supplier(supplier_id):
