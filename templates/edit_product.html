@@ -129,7 +129,7 @@
 </form>
 
 <script>
-    const categoryData = {{ categories|tojson }};
+    const categoryData = {{ categories | tojson | safe }};
     const subSelect = document.getElementById("category_sub");
 
     function updateSubcategories() {

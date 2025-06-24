@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime, timedelta
 from collections import defaultdict
 import hashlib
-import os
 import psycopg2
 import psycopg2.extras
 from db import get_db_connection
@@ -405,6 +404,17 @@ def print_order_plan(order_code):
         FROM sales_volume
     """)
     sales_rows = cursor.fetchall()
+
+    # ✅ 주문 정보 조회
+    cursor.execute("""
+        SELECT order_date, staff_name, supplier_name
+        FROM orders
+        WHERE order_code = %s
+        LIMIT 1
+    """, (order_code,))
+    order = cursor.fetchone()
+    
+
     from datetime import date
     from collections import defaultdict
     from dateutil.relativedelta import relativedelta

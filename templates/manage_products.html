@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // 대분류-소분류 연동
-    const categoryData = {{ categories | tojson }};
+    const categoryData = {{ categories | tojson | safe }};
     const subCategorySelect = document.getElementById("category_sub");
     const mainCategorySelect = document.getElementById("category_main");
 
