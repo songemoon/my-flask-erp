@@ -6,13 +6,6 @@ from db import get_db_connection
 from inventory import safe_int
 
 
-def reset_order_table():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS orders;")
-    conn.commit()
-    conn.close()
-
 def new_order():
     user = session.get("user")
     if request.method == "POST":
@@ -407,7 +400,7 @@ def generate_order_code():
     conn.close()
     # 네 자리 시퀀스: 0001, 0002, ...
     return f"{year}-{count + 1:04d}"
-
+    
 def create_order_table():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -422,7 +415,8 @@ def create_order_table():
             quantity INTEGER NOT NULL,
             inquiry TEXT,
             order_date TEXT NOT NULL,
-            staff_name TEXT NOT NULL
+            staff_name TEXT NOT NULL,
+            staff_english_name TEXT  -- 여기 추가된 컬럼입니다!
         )
     """)
     conn.commit()
