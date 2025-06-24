@@ -22,18 +22,25 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             width: 360px;
             box-sizing: border-box;
+            text-align: center;
+        }
+
+        .login-container img.logo {
+            width: 120px;
+            margin-bottom: 20px;
         }
 
         .login-container h1 {
-            text-align: center;
             margin-bottom: 30px;
             color: #1e272e;
+            font-size: 1.5rem;
         }
 
         form {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            text-align: left;
         }
 
         label {
@@ -71,6 +78,7 @@
 </head>
 <body>
     <div class="login-container">
+        <img src="https://zemez.io/html/wp-content/uploads/sites/9/2017/10/logo.png" alt="Logo" class="logo">
         <h1>🔐 로그인</h1>
         <form method="post">
             <div>
