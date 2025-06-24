@@ -6,6 +6,13 @@ from db import get_db_connection
 from inventory import safe_int
 
 
+def reset_order_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS orders;")
+    conn.commit()
+    conn.close()
+
 def new_order():
     user = session.get("user")
     if request.method == "POST":
