@@ -33,7 +33,7 @@ def new_order():
         order_code = generate_order_code()
         order_date = datetime.today().strftime("%Y-%m-%d")
         staff_name = user["name"]
-
+        staff_english_name = user.get("english_name", "")
         cursor.execute("SELECT name FROM suppliers WHERE id = %s", (supplier_id,))
         row = cursor.fetchone()
         if row:
@@ -48,8 +48,8 @@ def new_order():
                 INSERT INTO orders (
                     order_code, supplier_id, supplier_name,
                     product_sku, product_name, quantity,
-                    inquiry, order_date, staff_name
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    inquiry, order_date, staff_name, staff_english_name
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 order_code, supplier_id, supplier_name,
                 sku, name, qty,
