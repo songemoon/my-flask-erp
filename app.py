@@ -88,15 +88,25 @@ app.config.from_object(Config)
 app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
 
-conn = get_db_connection()
-cursor = conn.cursor()
+@app.route("/delete-test-data")
+def delete_test_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 삭제 순서 중요 (자식 테이블부터)
+        tables = ["inventory_movement"]
+        for table in tables:
+            cursor.execute(f"DELETE FROM {table};")
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return f"삭제 중 오류 발생: {e}", 500
+    finally:
+        conn.close()
 
-tables = ["inventory_movement"]
-for table in tables:
-    cursor.execute(f"DELETE FROM {table};")
+    return "✅ 테스트용 데이터 모두 삭제 완료!"
 
-conn.commit()
-conn.close()
 
 
 @app.route("/")
