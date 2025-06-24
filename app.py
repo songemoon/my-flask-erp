@@ -82,19 +82,11 @@ from auth import (
     change_password
 )
 from schedule_routes import (create_schedule_table)
-from order import reset_order_table, create_order_table
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
-
-
-@app.route("/reset-orders")
-def reset_orders():
-    reset_order_table()   # 기존 orders 테이블 삭제
-    create_order_table()  # 새로 orders 테이블 생성
-    return "✅ orders 테이블이 초기화되었습니다."
 
 
 @app.route("/")
