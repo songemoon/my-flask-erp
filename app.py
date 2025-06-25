@@ -476,7 +476,7 @@ def print_order_plan(order_code):
 
 
 
-#if __name__ == "__main__":
+if __name__ == "__main__":
 #    create_table()
 #    create_inventory_table()
 #    create_inventory_movement_table()
@@ -487,4 +487,4 @@ def print_order_plan(order_code):
 #    create_sales_volume_table()
 #    create_real_stock_table()
 #    add_english_name_column()
-   # app.run(debug=True)
+    app.run(debug=True)

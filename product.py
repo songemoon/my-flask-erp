@@ -328,6 +328,7 @@ def manage_products():
                 import io, csv
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
                 reader = csv.DictReader(stream, delimiter=';')
+                reader.fieldnames = [f.strip().replace('\ufeff', '') for f in reader.fieldnames]
                 sku_tracker = {}
 
                 for row in reader:
@@ -339,6 +340,9 @@ def manage_products():
                     suffix_raw = row.get("접미사")              # 먼저 값을 가져오고
                     suffix_raw = suffix_raw.strip() if suffix_raw else ""  # 안전하게 strip 
                     category_suffix = SUFFIX_CODE_MAP.get(suffix_raw, "")
+                    print("📌 ROW:", row)
+                    print("📌 category_main:", row.get("대분류"), "category_sub:", row.get("소분류"))
+                    print("📌 fieldnames:", reader.fieldnames)
 
                     if not (name and english_name and category_main and category_sub):
                         print(f"⚠️ 필수값 누락: {row}")
