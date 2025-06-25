@@ -23,6 +23,7 @@ def create_real_stock_table():
 
 def upload_real_stock():
     message = None
+    conn = None  # ✅ 사전 선언
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -31,7 +32,7 @@ def upload_real_stock():
         else:
             try:
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
-                reader = csv.DictReader(stream, ㅇ디ㅑㅡㅑㅅㄷㄱ=';')
+                reader = csv.DictReader(stream, delimiter=';')
 
                 conn = get_db_connection()
                 cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -62,10 +63,12 @@ def upload_real_stock():
                 message = "✅ 실재고 업로드 완료 (기존 데이터 초기화됨)"
 
             except Exception as e:
-                conn.rollback()
+                if conn:  # ✅ conn이 존재할 때만 rollback
+                    conn.rollback()
                 message = f"❌ 업로드 중 오류 발생: {e}"
 
             finally:
-                conn.close()
+                if conn:  # ✅ conn이 존재할 때만 close
+                    conn.close()
 
     return render_template("upload_stock.html", message=message)
