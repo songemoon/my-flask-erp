@@ -329,7 +329,6 @@ def search_inventory():
     # 🔹 입고예정 항목 처리
     cursor.execute("SELECT order_code, product_sku, product_name FROM orders")
     all_orders = cursor.fetchall()
-    orders_keys = [desc[0] for desc in cursor.description]
 
     cursor.execute("SELECT sku, order_number FROM inventory")
     received_rows = cursor.fetchall()
@@ -337,11 +336,10 @@ def search_inventory():
     received_set = set((row["sku"], row["order_number"]) for row in received_rows)
 
     pending_items = []
-    for row in all_orders:
-        row_dict = dict(zip(orders_keys, row))
-        key = (row_dict["product_sku"], row_dict["order_code"])
+    for row in all_orders:  # ✅ row는 이미 dict
+        key = (row["product_sku"], row["order_code"])
         if key not in received_set:
-            pending_items.append(row_dict)
+            pending_items.append(row)  # ✅ 그대로 사용
 
     conn.close()
 
@@ -421,7 +419,9 @@ def warehouse_transfer():
                 message = "❌ 이동 가능한 재고가 없습니다."
                 return render_template("manage_inventory.html", action="transfer", message=message, identifier=identifier, product=product_data)
 
-            inventory_id, expiration_date, current_qty = row
+            inventory_id = row["id"]
+            expiration_date = row["expiration_date"]
+            current_qty = int(row["total_qty"] or 0)
         else:
             cursor.execute("""
                 SELECT id, total_qty FROM inventory
@@ -434,7 +434,8 @@ def warehouse_transfer():
                 message = f"❌ {from_warehouse}의 해당 유통기한 재고 없음"
                 return render_template("manage_inventory.html", action="transfer", message=message, identifier=identifier, product=product_data)
 
-            inventory_id, current_qty = row
+            inventory_id = row["id"]
+            current_qty = int(row["total_qty"] or 0)
 
         if total_qty > current_qty:
             conn.close()
