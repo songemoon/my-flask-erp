@@ -336,7 +336,8 @@ def manage_products():
                     category_main = row.get("대분류")
                     category_sub = row.get("소분류")
                     barcode = row.get("바코드", "").strip()
-                    suffix_raw = row.get("접미사", "").strip()
+                    suffix_raw = row.get("접미사")              # 먼저 값을 가져오고
+                    suffix_raw = suffix_raw.strip() if suffix_raw else ""  # 안전하게 strip 
                     category_suffix = SUFFIX_CODE_MAP.get(suffix_raw, "")
 
                     if not (name and english_name and category_main and category_sub):
