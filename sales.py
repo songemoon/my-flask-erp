@@ -26,7 +26,7 @@ def upload_sales_volume():
                 month_int = int(month)
 
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
-                reader = csv.DictReader(stream, ㅇ디ㅑㅡㅑㅅㄷㄱ=';')
+                reader = csv.DictReader(stream, delimiter=';')
 
                 cursor.execute("""
                     DELETE FROM sales_volume
