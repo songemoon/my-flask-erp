@@ -75,17 +75,22 @@ def sales_overview():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # 실재고 데이터
+    # ✅ 제품 정보 미리 조회 (sku 기준)
+    cursor.execute("SELECT sku, name, barcode FROM products")
+    product_info = {
+        row["sku"]: {"product_name": row["name"], "barcode": row["barcode"]}
+        for row in cursor.fetchall()
+    }
+
+    # ✅ 실재고 데이터
     cursor.execute("""
         SELECT
             sku,
-            MIN(product_name) AS product_name,   -- MIN()으로 대표값 집계
+            MIN(product_name) AS product_name,
             expiry_text,
-            SUM(quantity)     AS quantity
+            SUM(quantity) AS quantity
         FROM real_stock
-        GROUP BY
-            sku,
-            expiry_text
+        GROUP BY sku, expiry_text
     """)
     stock_data = cursor.fetchall()
 
@@ -94,19 +99,19 @@ def sales_overview():
         key = (row["sku"], row["expiry_text"])
         stock_dict[key] = {
             "sku": row["sku"],
-            "product_name": row["product_name"],
+            "product_name": row["product_name"],  # 일단 실재고 값 (나중에 products 기준으로 덮어씀)
             "expiry_text": row["expiry_text"],
             "real_stock": row["quantity"]
         }
 
-    # 최근 12개월
+    # ✅ 최근 12개월
     recent_months = []
     today = date.today()
     for i in range(12):
         dt = today - relativedelta(months=i)
         recent_months.append(dt.strftime("%Y-%m"))
 
-    # 판매량 데이터
+    # ✅ 판매량 데이터
     cursor.execute("SELECT sku, year, month, quantity FROM sales_volume")
     sales_data = cursor.fetchall()
 
@@ -116,14 +121,14 @@ def sales_overview():
         if ym in recent_months:
             sales_by_sku[row["sku"]][ym] += row["quantity"]
 
-    # 평균판매량 (최근 4개월)
+    # ✅ 평균판매량 (최근 4개월)
     recent_4 = recent_months[:4]
     avg_sales = {}
     for sku, month_dict in sales_by_sku.items():
         values = [month_dict.get(m, 0) for m in recent_4]
         avg_sales[sku] = round(sum(values) / 4, 2) if values else 0
 
-    # 입고예정 계산
+    # ✅ 입고예정 계산
     cursor.execute("SELECT order_code, product_sku, product_name, quantity FROM orders")
     all_orders = cursor.fetchall()
 
@@ -138,10 +143,20 @@ def sales_overview():
 
     conn.close()
 
-    # 결과 병합
+    # ✅ 결과 병합
     final_data = []
     for (sku, expiry), stock in stock_dict.items():
         row = dict(stock)
+
+        # 🔁 제품 정보 덮어쓰기
+        product = product_info.get(sku)
+        if product:
+            row["product_name"] = product["product_name"]
+            row["barcode"] = product["barcode"]
+        else:
+            row["product_name"] = row.get("product_name", "")
+            row["barcode"] = ""
+
         row["incoming_qty"] = incoming.get(sku, 0)
         row["avg_sales"] = avg_sales.get(sku, 0)
 
@@ -150,7 +165,7 @@ def sales_overview():
 
         final_data.append(row)
 
-    # 검색 필터
+    # ✅ 검색 필터
     if query:
         final_data = [
             r for r in final_data
@@ -158,6 +173,7 @@ def sales_overview():
         ]
 
     return render_template("sales_overview.html", results=final_data, months=recent_months, query=query)
+
 
 def create_sales_volume_table():
     conn = get_db_connection()
