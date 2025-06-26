@@ -350,6 +350,7 @@
 <!-- 팝업 로직 스크립트 -->
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+<script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 
 <script>
 function fetchProductsByBarcode() {
@@ -402,54 +403,44 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 </script>
+
 <script>
-let videoStream;
-
 function startBarcodeScan(inputId) {
-    const video = document.getElementById('barcodeVideo');
     const input = document.getElementById(inputId);
-    video.style.display = 'block';
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => {
-            videoStream = stream;
-            video.srcObject = stream;
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#barcodeVideo'), // video 태그
+            constraints: {
+                facingMode: "environment"
+            }
+        },
+        decoder: {
+            readers: ["ean_reader", "code_128_reader", "upc_reader"]
+        }
+    }, function(err) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        Quagga.start();
+    });
 
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-
-            const scan = () => {
-                if (!videoStream) return;
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-                const result = jsQR(imageData.data, canvas.width, canvas.height);
-                if (result) {
-                    input.value = result.data;
-                    stopBarcodeScan();
-                } else {
-                    requestAnimationFrame(scan);
-                }
-            };
-            requestAnimationFrame(scan);
-        })
-        .catch(err => {
-            console.error("카메라 접근 실패:", err);
-        });
+    Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        input.value = code;
+        stopBarcodeScan();
+    });
 }
 
-
 function stopBarcodeScan() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
+    Quagga.stop();
     document.getElementById('barcodeVideo').style.display = 'none';
 }
 </script>
+
 
 
 {% endblock %}
