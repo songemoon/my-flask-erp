@@ -39,6 +39,7 @@ def upload_sales_volume():
 
                 for row in reader:
                     sku = row.get("SKU", "").strip()
+                    name = row.get("제품명", "").strip()
                     qty = row.get("판매량", "").strip()
 
                     if not sku or not qty:
@@ -54,9 +55,9 @@ def upload_sales_volume():
                         continue
 
                     cursor.execute("""
-                        INSERT INTO sales_volume (sku, year, month, quantity)
-                        VALUES (%s, %s, %s, %s)
-                    """, (sku, year_int, month_int, qty_int))
+                        INSERT INTO sales_volume (sku, product_name, year, month, quantity)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (sku, name, year_int, month_int, qty_int))
                     inserted += 1
 
                 conn.commit()
@@ -191,3 +192,20 @@ def create_sales_volume_table():
     """)
     conn.commit()
     conn.close()
+
+
+def add_product_name_column():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("ALTER TABLE sales_volume ADD COLUMN product_name TEXT;")
+        conn.commit()
+        print("✅ product_name 컬럼 추가 완료")
+    except Exception as e:
+        print("❌ 에러 발생:", e)
+        conn.rollback()
+    finally:
+        conn.close()
+
+# 아래 한 줄을 실행 시점에만 잠깐 추가
+add_product_name_column()
