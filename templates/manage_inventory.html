@@ -216,13 +216,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputIn" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputIn')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -269,13 +263,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputOut" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputOut')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -310,13 +298,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputTransfer" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputTransfer')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -348,10 +330,6 @@
 {% endif %}
 
 <!-- 팝업 로직 스크립트 -->
-
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
-<script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
-
 <script>
 function fetchProductsByBarcode() {
     const barcode = document.querySelector('input[name="identifier"]').value;
@@ -403,44 +381,5 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 </script>
-
-<script>
-function startBarcodeScan(inputId) {
-    const input = document.getElementById(inputId);
-
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#barcodeVideo'), // video 태그
-            constraints: {
-                facingMode: "environment"
-            }
-        },
-        decoder: {
-            readers: ["ean_reader", "code_128_reader", "upc_reader"]
-        }
-    }, function(err) {
-        if (err) {
-            console.error(err);
-            return;
-        }
-        Quagga.start();
-    });
-
-    Quagga.onDetected(function(result) {
-        const code = result.codeResult.code;
-        input.value = code;
-        stopBarcodeScan();
-    });
-}
-
-function stopBarcodeScan() {
-    Quagga.stop();
-    document.getElementById('barcodeVideo').style.display = 'none';
-}
-</script>
-
-
 
 {% endblock %}
