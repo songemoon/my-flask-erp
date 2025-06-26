@@ -24,6 +24,11 @@
         font-size: 0.95rem;
     }
 
+    .table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -33,12 +38,16 @@
         border: 1px solid #dcdde1;
         border-radius: 8px;
         overflow: hidden;
+        white-space: nowrap;
+        min-width: 1200px;
     }
 
     th, td {
         padding: 12px 10px;
         border: 1px solid #dcdde1;
         text-align: center;
+        white-space: nowrap;
+        min-width: 100px;
     }
 
     th {
@@ -46,12 +55,26 @@
         font-weight: bold;
         color: #333;
     }
-    th.product-name,
-    td.product-name {
-        min-width: 180px;
+
+    th.product-name, td.product-name {
+        min-width: 200px;
         text-align: left;
         padding-left: 14px;
     }
+
+    th.barcode, td.barcode {
+        min-width: 160px;
+    }
+
+    th.warehouse, td.warehouse,
+    th.shelf, td.shelf {
+        min-width: 120px;
+    }
+
+    th.expiry, td.expiry {
+        min-width: 140px;
+    }
+
     td input,
     td select {
         width: 100%;
@@ -113,7 +136,6 @@
         border: 1px solid #e74c3c;
     }
 </style>
-
 
 <h2>📦 발주번호: {{ order_code }} 입고 등록</h2>
 
