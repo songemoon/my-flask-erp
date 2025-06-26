@@ -27,6 +27,7 @@ def upload_sales_volume():
 
                 stream = io.StringIO(file.stream.read().decode("utf-8"))
                 reader = csv.DictReader(stream, delimiter=';')
+                reader.fieldnames = [f.strip().replace('\ufeff', '') for f in reader.fieldnames]
 
                 cursor.execute("""
                     DELETE FROM sales_volume
