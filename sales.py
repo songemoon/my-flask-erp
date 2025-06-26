@@ -39,7 +39,7 @@ def upload_sales_volume():
 
                 for row in reader:
                     sku = row.get("SKU", "").strip()
-                    qty = row.get("판매수량", "").strip()
+                    qty = row.get("판매량", "").strip()
 
                     if not sku or not qty:
                         print("⚠️ 필수 항목 누락:", row)
