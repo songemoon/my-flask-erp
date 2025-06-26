@@ -216,13 +216,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputIn" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputIn')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -269,13 +263,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputOut" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputOut')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -310,13 +298,7 @@
     {% if not product %}
         <form method="post">
             <input type="hidden" name="action" value="{{ action }}">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                제품 식별자 (SKU or Barcode):
-                <input name="identifier" id="barcodeInputTransfer" required value="{{ identifier or '' }}">
-                <button type="button" onclick="startBarcodeScan('barcodeInputTransfer')">📷 바코드 스캔</button>
-            </div>
-            <video id="barcodeVideo" width="300" height="200" autoplay muted playsinline style="display:none; border: 1px solid #ccc; margin-top: 10px;"></video>
-
+            제품 식별자 (SKU or Barcode): <input name="identifier" required value="{{ identifier or '' }}">
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
@@ -348,9 +330,6 @@
 {% endif %}
 
 <!-- 팝업 로직 스크립트 -->
-
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
-
 <script>
 function fetchProductsByBarcode() {
     const barcode = document.querySelector('input[name="identifier"]').value;
@@ -402,54 +381,5 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 </script>
-<script>
-let videoStream;
-
-function startBarcodeScan(inputId) {
-    const video = document.getElementById('barcodeVideo');
-    const input = document.getElementById(inputId);
-    video.style.display = 'block';
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => {
-            videoStream = stream;
-            video.srcObject = stream;
-
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-
-            const scan = () => {
-                if (!videoStream) return;
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-                const result = jsQR(imageData.data, canvas.width, canvas.height);
-                if (result) {
-                    input.value = result.data;
-                    stopBarcodeScan();
-                } else {
-                    requestAnimationFrame(scan);
-                }
-            };
-            requestAnimationFrame(scan);
-        })
-        .catch(err => {
-            console.error("카메라 접근 실패:", err);
-        });
-}
-
-
-function stopBarcodeScan() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
-    document.getElementById('barcodeVideo').style.display = 'none';
-}
-</script>
-
 
 {% endblock %}
