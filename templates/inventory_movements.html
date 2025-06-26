@@ -129,42 +129,44 @@
 
 <hr>
 
-<table class="sortable">
-    <thead>
-        <tr>
-            <th>날짜</th>
-            <th>SKU</th>
-            <th>제품명</th>
-            <th>영문명</th>
-            <th>이동유형</th>
-            <th>박스수량</th>
-            <th>낱개수량</th>
-            <th>출발창고</th>
-            <th>도착창고</th>
-            <th>유통기한</th>
-            <th>이동일자</th>
-            <th>사유</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in movements %}
-        <tr>
-            <td>{{ row['timestamp'].strftime('%Y-%m-%d %H:%M:%S') }}</td>
-            <td>{{ row['sku'] }}</td>
-            <td>{{ row['product_name'] }}</td>
-            <td>{{ row['product_name_en'] or '-' }}</td>
-            <td>{{ row['movement_type'] }}</td>
-            <td>{{ row['quantity_box'] }}</td>
-            <td>{{ row['quantity_piece'] }}</td>
-            <td>{{ row['from_warehouse'] or '-' }}</td>
-            <td>{{ row['to_warehouse'] or '-' }}</td>
-            <td>{{ row['expiration_date'] or '-' }}</td>
-            <td>{{ row['timestamp'].strftime('%Y-%m-%d') }}</td>
-            <td>{{ row['reason'] or '-' }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-container">
+    <table class="sortable">
+        <thead>
+            <tr>
+                <th>날짜</th>
+                <th>SKU</th>
+                <th>제품명</th>
+                <th>영문명</th>
+                <th>이동유형</th>
+                <th>박스수량</th>
+                <th>낱개수량</th>
+                <th>출발창고</th>
+                <th>도착창고</th>
+                <th>유통기한</th>
+                <th>이동일자</th>
+                <th>사유</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in movements %}
+            <tr>
+                <td>{{ row['timestamp'].strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ row['sku'] }}</td>
+                <td>{{ row['product_name'] }}</td>
+                <td>{{ row['product_name_en'] or '-' }}</td>
+                <td>{{ row['movement_type'] }}</td>
+                <td>{{ row['quantity_box'] }}</td>
+                <td>{{ row['quantity_piece'] }}</td>
+                <td>{{ row['from_warehouse'] or '-' }}</td>
+                <td>{{ row['to_warehouse'] or '-' }}</td>
+                <td>{{ row['expiration_date'] or '-' }}</td>
+                <td>{{ row['timestamp'].strftime('%Y-%m-%d') }}</td>
+                <td>{{ row['reason'] or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -175,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const index = Array.from(header.parentElement.children).indexOf(header);
       const ascending = !header.classList.contains("asc");
       table.querySelectorAll("th").forEach(h => h.classList.remove("asc","desc"));
-      header.classList.add(ascending?"asc":"desc");
+      header.classList.add(ascending ? "asc" : "desc");
       const rows = Array.from(table.tBodies[0].rows);
       rows.sort((a,b) => {
         const aText = a.cells[index].textContent.trim();
@@ -184,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? aText.localeCompare(bText,'ko')
           : bText.localeCompare(aText,'ko');
       });
-      rows.forEach(r=>table.tBodies[0].appendChild(r));
+      rows.forEach(r => table.tBodies[0].appendChild(r));
     });
   });
 });

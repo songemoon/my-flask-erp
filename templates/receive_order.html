@@ -119,56 +119,59 @@
 
 <form method="post">
     <input type="hidden" name="order_code" value="{{ order_code }}">
-    <table>
-        <thead>
-            <tr>
-                <th class="product-name">제품명</th>
-                <th class="sku">SKU</th>
-                <th class="barcode">바코드</th>
-                <th class="unit">입수</th>
-                <th class="box-qty">박스수량</th>
-                <th class="piece-qty">낱개수량</th>
-                <th class="warehouse">창고</th>
-                <th class="shelf">선반</th>
-                <th class="expiry">유통기한</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for item in items %}
-            {% set idx = loop.index0 %}
-            <tr>
-                <td class="product-name">
-                    {{ item.product_name }}
-                    <input type="hidden" name="name_{{ idx }}" value="{{ item.product_name }}">
-                </td>
-                <td>
-                    {{ item.product_sku }}
-                    <input type="hidden" name="sku_{{ idx }}" value="{{ item.product_sku }}">
-                </td>
-                <td>
-                    <input type="text"
-                        name="barcode_scan_{{ idx }}"
-                        placeholder="바코드 스캔"
-                        oninput="checkBarcode({{ idx }}, '{{ item.barcode | e }}')">
-                    <div id="barcode_warning_{{ idx }}" class="barcode-warning"></div>
-                </td>
-                <td><input type="number" name="unit_per_box_{{ idx }}" value="1" required></td>
-                <td><input type="number" name="box_qty_{{ idx }}" value="0" required></td>
-                <td><input type="number" name="piece_qty_{{ idx }}" value="0" required></td>
-                <td>
-                    <select name="warehouse_{{ idx }}" required>
-                        <option value="">-- 창고 선택 --</option>
-                        <option value="신창고 A">신창고 A</option>
-                        <option value="매장창고 B">매장창고 B</option>
-                        <option value="기타 C">기타 C</option>
-                    </select>
-                </td>
-                <td><input type="text" name="shelf_location_{{ idx }}"></td>
-                <td><input type="date" name="expiration_date_{{ idx }}"></td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th class="product-name">제품명</th>
+                    <th class="sku">SKU</th>
+                    <th class="barcode">바코드</th>
+                    <th class="unit">입수</th>
+                    <th class="box-qty">박스수량</th>
+                    <th class="piece-qty">낱개수량</th>
+                    <th class="warehouse">창고</th>
+                    <th class="shelf">선반</th>
+                    <th class="expiry">유통기한</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                {% set idx = loop.index0 %}
+                <tr>
+                    <td class="product-name">
+                        {{ item.product_name }}
+                        <input type="hidden" name="name_{{ idx }}" value="{{ item.product_name }}">
+                    </td>
+                    <td>
+                        {{ item.product_sku }}
+                        <input type="hidden" name="sku_{{ idx }}" value="{{ item.product_sku }}">
+                    </td>
+                    <td class="barcode">
+                        <input type="text"
+                            name="barcode_scan_{{ idx }}"
+                            placeholder="바코드 스캔"
+                            oninput="checkBarcode({{ idx }}, '{{ item.barcode | e }}')">
+                        <div id="barcode_warning_{{ idx }}" class="barcode-warning"></div>
+                    </td>
+                    <td><input type="number" name="unit_per_box_{{ idx }}" value="1" required></td>
+                    <td><input type="number" name="box_qty_{{ idx }}" value="0" required></td>
+                    <td><input type="number" name="piece_qty_{{ idx }}" value="0" required></td>
+                    <td>
+                        <select name="warehouse_{{ idx }}" required>
+                            <option value="">-- 창고 선택 --</option>
+                            <option value="신창고 A">신창고 A</option>
+                            <option value="매장창고 B">매장창고 B</option>
+                            <option value="기타 C">기타 C</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="shelf_location_{{ idx }}"></td>
+                    <td><input type="date" name="expiration_date_{{ idx }}"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <button type="submit">입고 등록</button>
 </form>
