@@ -8,13 +8,13 @@
 
 <!-- 출퇴근 등록 폼 -->
 <div style="margin-bottom: 40px;">
-    <form method="post" action="{{ url_for('clock_in') }}" style="margin-bottom: 16px;">
+    <form method="post" action="{{ url_for('attendance.clock_in') }}" style="margin-bottom: 16px;">
         <label>출근 메모:</label>
         <input type="text" name="memo_in" placeholder="예: 지각 사유, 외근 등" style="width: 300px; padding: 6px;">
         <button type="submit">출근</button>
     </form>
 
-    <form method="post" action="{{ url_for('clock_out') }}">
+    <form method="post" action="{{ url_for('attendance.clock_out') }}">
         <label>퇴근 메모:</label>
         <input type="text" name="memo_out" placeholder="예: 야근 사유, 조기퇴근 등" style="width: 300px; padding: 6px;">
         <button type="submit">퇴근</button>
