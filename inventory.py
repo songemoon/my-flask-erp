@@ -211,6 +211,24 @@ def inventory_out():
                 expiration_date = exp_date
             else:
                 expiration_date = exp_date.strftime("%Y-%m-%d")
+            # ✅ 유통기한 경고 메시지 구성
+        try:
+            if expiration_date:
+                if isinstance(expiration_date, str):
+                    exp_date_obj = datetime.strptime(expiration_date, "%Y-%m-%d").date()
+                else:
+                    exp_date_obj = expiration_date
+
+                today = datetime.today().date()
+                days_left = (exp_date_obj - today).days
+
+                if days_left < 0:
+                    warning = f"⚠️ 유통기한이 경과된 상품입니다: {expiration_date}"
+                elif days_left <= 30:
+                    warning = f"⚠️ 유통기한이 30일 이하입니다 ({days_left}일 남음): {expiration_date}"
+        except Exception as e:
+            warning = "⚠️ 유통기한 확인 중 오류 발생"
+
         else:
             cursor.execute(
                 "SELECT id, total_qty FROM inventory "

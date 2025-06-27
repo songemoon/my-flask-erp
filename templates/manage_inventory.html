@@ -267,7 +267,7 @@
             <button type="button" onclick="fetchProductsByBarcode()">제품 찾기</button>
         </form>
     {% else %}
-        <form method="post">
+        <form method="post" onsubmit="return checkExpiryBeforeSubmit(this)">
             <input type="hidden" name="action" value="{{ action }}">
             <input type="hidden" name="identifier" value="{{ identifier }}">
             <p><b>SKU:</b> {{ identifier }}</p>
@@ -291,7 +291,7 @@
             유통기한 (Expiry): <input type="date" name="expiration_date">
             사유 (Reason): <input name="reason">
             <button type="submit">Confirm</button>
-        </form>
+        </form>        
     {% endif %}
 {% elif action == 'transfer' %}
     <h2>🔁 창고이동 (Transfer)</h2>
@@ -319,8 +319,8 @@
             </select>
             도착 창고 (To):
             <select name="to_warehouse">
-                <option value="신창고 A">신창고 (From)</option>
-                <option value="매장창고 B">매장창고 (To)</option>
+                <option value="신창고 A">신창고 (A)</option>
+                <option value="매장창고 B">매장창고 (B)</option>
                 <option value="기타 C">기타 (C)</option>
             </select>
             유통기한 (Expiry): <input type="date" name="expiration_date">
@@ -381,5 +381,27 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 </script>
+<script>
+function checkExpiryBeforeSubmit(form) {
+    const actionInput = form.querySelector('input[name="action"]');
+    if (!actionInput || actionInput.value !== 'out') return true;
+
+    const expInput = form.querySelector('input[name="expiration_date"]');
+    if (!expInput || !expInput.value) return true;  // 유통기한 없으면 경고 없음
+
+    const expDate = new Date(expInput.value);
+    const today = new Date();
+    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+        return confirm("⚠️ 유통기한이 이미 경과된 제품입니다. 출고를 계속 진행하시겠습니까?");
+    } else if (diffDays <= 30) {
+        return confirm(`⚠️ 유통기한이 ${diffDays}일 남았습니다. 출고를 계속 진행하시겠습니까?`);
+    }
+
+    return true;  // 경고 조건이 없으면 그대로 진행
+}
+</script>
+
 
 {% endblock %}

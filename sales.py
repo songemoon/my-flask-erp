@@ -208,4 +208,4 @@ def add_product_name_column():
         conn.close()
 
 # 아래 한 줄을 실행 시점에만 잠깐 추가
-add_product_name_column()
+#add_product_name_column()
