@@ -81,7 +81,7 @@ from auth import (
     change_password
 )
 from schedule_routes import create_schedule_table
-from attendance import attendance_bp
+from attendance import attendance_bp, create_attendance_table
 
 
 app = Flask(__name__)
@@ -117,6 +117,7 @@ def home():
         return redirect(url_for("login"))
     return render_template("home.html")
 
+create_attendance_table()
 app.register_blueprint(attendance_bp)
 
 @app.route("/admin/add_user", methods=["GET", "POST"])

@@ -110,3 +110,21 @@ def delete_attendance(attendance_id):
         conn.close()
 
     return redirect(url_for("attendance.attendance_dashboard"))
+
+
+def create_attendance_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS attendance (
+            id SERIAL PRIMARY KEY,
+            user_name TEXT NOT NULL,
+            work_date DATE NOT NULL,
+            clock_in TIMESTAMP,
+            clock_out TIMESTAMP,
+            memo_in TEXT,
+            memo_out TEXT
+        );
+    """)
+    conn.commit()
+    conn.close()
