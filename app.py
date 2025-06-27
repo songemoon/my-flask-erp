@@ -81,6 +81,8 @@ from auth import (
     change_password
 )
 from schedule_routes import create_schedule_table
+from attendance import attendance_bp
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -114,6 +116,8 @@ def home():
     if not user:
         return redirect(url_for("login"))
     return render_template("home.html")
+
+app.register_blueprint(attendance_bp)
 
 @app.route("/admin/add_user", methods=["GET", "POST"])
 def admin_add_user():
@@ -476,7 +480,7 @@ def print_order_plan(order_code):
 
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 #    create_table()
 #    create_inventory_table()
 #    create_inventory_movement_table()
@@ -487,4 +491,4 @@ if __name__ == "__main__":
 #    create_sales_volume_table()
 #    create_real_stock_table()
 #    add_english_name_column()
-    app.run(debug=True)
+#   app.run(debug=True)

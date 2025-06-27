@@ -169,6 +169,13 @@
     <div class="layout">
         <nav>
             <h2>메뉴</h2>
+            <div class="menu-section">
+                <div class="menu-title">🏠 메인</div>
+                <div class="submenu">
+                    <a href="{{ url_for('home') }}">홈</a>
+                    <a href="{{ url_for('attendance_dashboard') }}">근태 로그</a>
+                </div>
+            </div>
 
             <div class="menu-section">
                 <div class="menu-title">📦 제품</div>
