@@ -3,6 +3,11 @@
 {% block content %}
 <h2>근태 기록</h2>
 
+<!-- 엑셀 다운로드 버튼 (테이블 위에 위치) -->
+<a href="{{ url_for('attendance.download_attendance') }}">
+  <button>📥 엑셀 다운로드</button>
+</a>
+
 <table border="1" cellpadding="8">
   <thead>
     <tr>

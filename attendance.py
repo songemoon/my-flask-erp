@@ -1,8 +1,10 @@
-from flask import Blueprint, request, session, redirect, url_for, render_template, flash
+from flask import Blueprint, request, session, redirect, url_for, render_template, flash, send_file
 from datetime import datetime, date
 import psycopg2
 import psycopg2.extras
 from db import get_db_connection
+import io
+import pandas as pd
 
 attendance_bp = Blueprint("attendance", __name__)
 
@@ -15,7 +17,8 @@ def clock_in():
 
     today = date.today()
     memo_in = request.form.get("memo_in", "").strip()
-    ip_address = request.remote_addr  # 사용자의 접속 IP 추출
+    xff = request.headers.get('X-Forwarded-For')
+    ip_address = xff.split(',')[0].strip() if xff else request.remote_addr
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -51,7 +54,8 @@ def clock_out():
 
     today = date.today()
     memo_out = request.form.get("memo_out", "").strip()
-    ip_address = request.remote_addr  # 사용자 접속 IP 추출
+    xff = request.headers.get('X-Forwarded-For')
+    ip_address = xff.split(',')[0].strip() if xff else request.remote_addr
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -146,3 +150,41 @@ def create_attendance_table():
 
     conn.commit()
     conn.close()
+
+
+@attendance_bp.route("/attendance/download")
+def download_attendance():
+    user = session.get("user")
+    if not user:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute("""
+        SELECT work_date AS "날짜",
+               clock_in AS "출근 시간",
+               clock_out AS "퇴근 시간",
+               memo_in AS "출근 메모",
+               memo_out AS "퇴근 메모",
+               ip_address_in AS "출근 IP",
+               ip_address_out AS "퇴근 IP"
+        FROM attendance
+        WHERE user_name = %s
+        ORDER BY work_date DESC
+    """, (user["name"],))
+    records = cursor.fetchall()
+    conn.close()
+
+    df = pd.DataFrame(records)
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name="Attendance")
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="attendance_records.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
