@@ -3,12 +3,58 @@
 {% block content %}
 <h2>근태 기록</h2>
 
-<!-- 엑셀 다운로드 버튼 (테이블 위에 위치) -->
-<a href="{{ url_for('attendance.download_attendance') }}">
-  <button>📥 엑셀 다운로드</button>
-</a>
+<!-- 다운로드 버튼 스타일 -->
+<style>
+.excel-download-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
 
-<table border="1" cellpadding="8">
+.excel-download-btn:hover {
+  background-color: #45a049;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: 14px;
+}
+
+table th {
+  background-color: #f2f2f2;
+  text-align: center;
+}
+</style>
+
+<!-- 엑셀 다운로드 버튼 -->
+<a href="{{ url_for('attendance.download_attendance') }}" class="excel-download-btn">📥 엑셀 다운로드</a>
+
+<table>
   <thead>
     <tr>
       <th>날짜</th>
@@ -31,9 +77,9 @@
       <td>{{ record.clock_out or "-" }}</td>
       <td>{{ record.memo_out or "" }}</td>
       <td>{{ record.ip_address_out or "-" }}</td>
-      <td>
+      <td style="text-align: center;">
         <form method="POST" action="{{ url_for('attendance.delete_attendance', attendance_id=record['id']) }}">
-          <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+          <button type="submit" class="delete-btn" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
         </form>
       </td>
     </tr>
