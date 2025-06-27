@@ -1,40 +1,38 @@
 {% extends "base.html" %}
-{% block title %}근태 기록{% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom: 24px;">근태 기록 (Attendance Log)</h2>
+<h2>근태 기록</h2>
 
-<!-- 근태 로그 테이블 -->
-<table border="1" cellspacing="0" cellpadding="8" style="width: 100%; background: white; border-collapse: collapse;">
-    <thead style="background-color: #f1f2f6;">
-        <tr>
-            <th>날짜</th>
-            <th>출근 시간</th>
-            <th>출근 메모</th>
-            <th>퇴근 시간</th>
-            <th>퇴근 메모</th>
-            <th>삭제</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in records %}
-        <tr>
-            <td>{{ row.work_date }}</td>
-            <td>{{ row.clock_in or '-' }}</td>
-            <td>{{ row.memo_in or '-' }}</td>
-            <td>{{ row.clock_out or '-' }}</td>
-            <td>{{ row.memo_out or '-' }}</td>
-            <td>
-                <form method="post" action="{{ url_for('attendance.delete_attendance', attendance_id=row.id) }}" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                    <button type="submit" style="background-color: #e74c3c;">삭제</button>
-                </form>
-            </td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="5" style="text-align: center; color: #888;">근태 기록이 없습니다.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>날짜</th>
+      <th>출근 시간</th>
+      <th>출근 메모</th>
+      <th>출근 IP</th>
+      <th>퇴근 시간</th>
+      <th>퇴근 메모</th>
+      <th>퇴근 IP</th>
+      <th>삭제</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for record in records %}
+    <tr>
+      <td>{{ record.work_date }}</td>
+      <td>{{ record.clock_in or "-" }}</td>
+      <td>{{ record.memo_in or "" }}</td>
+      <td>{{ record.ip_address_in or "-" }}</td>
+      <td>{{ record.clock_out or "-" }}</td>
+      <td>{{ record.memo_out or "" }}</td>
+      <td>{{ record.ip_address_out or "-" }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('attendance.delete_attendance', attendance_id=record['id']) }}">
+          <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% endblock %}

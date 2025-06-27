@@ -15,6 +15,7 @@ def clock_in():
 
     today = date.today()
     memo_in = request.form.get("memo_in", "").strip()
+    ip_address = request.remote_addr  # 사용자의 접속 IP 추출
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -28,8 +29,11 @@ def clock_in():
         flash("이미 출근 등록이 완료되었습니다.")
     else:
         cursor.execute(
-            "INSERT INTO attendance (user_name, work_date, clock_in, memo_in) VALUES (%s, %s, %s, %s)",
-            (user["name"], today, datetime.now(), memo_in)
+            """
+            INSERT INTO attendance (user_name, work_date, clock_in, memo_in, ip_address_in)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (user["name"], today, datetime.now(), memo_in, ip_address)
         )
         conn.commit()
         flash("✅ 출근 등록 완료")
@@ -47,14 +51,15 @@ def clock_out():
 
     today = date.today()
     memo_out = request.form.get("memo_out", "").strip()
+    ip_address = request.remote_addr  # 사용자 접속 IP 추출
 
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE attendance
-        SET clock_out = %s, memo_out = %s
+        SET clock_out = %s, memo_out = %s, ip_address_out = %s
         WHERE user_name = %s AND work_date = %s AND clock_out IS NULL
-    """, (datetime.now(), memo_out, user["name"], today))
+    """, (datetime.now(), memo_out, ip_address, user["name"], today))
 
     if cursor.rowcount > 0:
         conn.commit()
@@ -76,7 +81,7 @@ def attendance_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
-        SELECT work_date, clock_in, clock_out, memo_in, memo_out
+        SELECT id, work_date, clock_in, clock_out, memo_in, memo_out, ip_address_in, ip_address_out
         FROM attendance
         WHERE user_name = %s
         ORDER BY work_date DESC
@@ -86,6 +91,7 @@ def attendance_dashboard():
     conn.close()
 
     return render_template("attendance_dashboard.html", records=records)
+
 
 
 @attendance_bp.route("/attendance/delete/<int:attendance_id>", methods=["POST"])
@@ -115,6 +121,8 @@ def delete_attendance(attendance_id):
 def create_attendance_table():
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # 기존 테이블 생성
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS attendance (
             id SERIAL PRIMARY KEY,
@@ -126,5 +134,15 @@ def create_attendance_table():
             memo_out TEXT
         );
     """)
+    
+    # IP 칼럼이 없으면 추가
+    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='attendance'")
+    existing_columns = [row[0] for row in cursor.fetchall()]
+
+    if "ip_address_in" not in existing_columns:
+        cursor.execute("ALTER TABLE attendance ADD COLUMN ip_address_in TEXT;")
+    if "ip_address_out" not in existing_columns:
+        cursor.execute("ALTER TABLE attendance ADD COLUMN ip_address_out TEXT;")
+
     conn.commit()
     conn.close()
