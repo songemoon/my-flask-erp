@@ -469,7 +469,8 @@ def warehouse_transfer():
         existing = cursor.fetchone()
 
         if existing:
-            dest_id, dest_qty = existing
+            dest_id = existing["id"]
+            dest_qty = existing["total_qty"]
             cursor.execute("UPDATE inventory SET total_qty = total_qty + %s WHERE id = %s", (total_qty, dest_id))
         else:
             cursor.execute("""
