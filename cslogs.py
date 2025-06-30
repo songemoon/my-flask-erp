@@ -3,6 +3,8 @@ from datetime import datetime
 from db import get_db_connection
 from auth import menu_required
 from functools import wraps
+import psycopg2.extras
+
 
 cslogs_bp = Blueprint("cslogs", __name__)
 
