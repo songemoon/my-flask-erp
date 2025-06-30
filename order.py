@@ -393,9 +393,10 @@ def generate_order_code():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(
-        "SELECT COUNT(*) AS cnt FROM orders WHERE order_code LIKE %s",
+        "SELECT COUNT(DISTINCT order_code) AS cnt FROM orders WHERE order_code LIKE %s",
         (f"{year}-%",)
     )
+
     row = cursor.fetchone()
     count = row["cnt"]  # 인덱스 대신 키 접근
     conn.close()
