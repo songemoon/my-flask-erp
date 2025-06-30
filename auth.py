@@ -7,6 +7,7 @@ from db import get_db_connection
 import json
 
 
+
 def login_required(view_function):
     @wraps(view_function)
     def wrapper(*args, **kwargs):
@@ -45,7 +46,7 @@ def create_user_table():
             password TEXT NOT NULL,
             name TEXT NOT NULL,
             english_name TEXT
-            accessible_menus TEXT
+            accessible_menus TEXT,
         )
     """)
     conn.commit()
