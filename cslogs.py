@@ -70,15 +70,17 @@ def register_cs_log():
 
     return render_template("register_cs_log.html")
 
-
 @cslogs_bp.route("/cs_logs")
 @menu_required("logs")
 def view_cs_logs():
     query = request.args.get("q", "").strip()
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)  # ✅ 여기를 수정
 
-    sql = "SELECT id, created_at, sku, product_name, log_type, quantity, reason, location, created_by FROM cs_logs"
+    sql = """
+        SELECT id, created_at, sku, product_name, log_type, quantity, reason, location, created_by
+        FROM cs_logs
+    """
     params = []
 
     if query:
@@ -92,8 +94,6 @@ def view_cs_logs():
     conn.close()
 
     return render_template("cs_logs.html", logs=logs, query=query)
-
-
 
 
 @cslogs_bp.route("/cs_logs/edit/<int:log_id>", methods=["GET", "POST"])
