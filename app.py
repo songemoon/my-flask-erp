@@ -512,4 +512,4 @@ if __name__ == "__main__":
 #    create_sales_volume_table()
 #    create_real_stock_table()
 #    add_english_name_column()
-   app.run(debug=True)
+    app.run(debug=True)
