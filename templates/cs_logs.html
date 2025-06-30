@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}CS 로그 조회{% endblock %}
+
+{% block content %}
+<h2>📋 CS 로그 조회</h2>
+
+<form method="get" style="margin-bottom: 20px;" class="filter-form">
+    <input type="text" name="q" placeholder="SKU 또는 제품명 검색" value="{{ query }}" class="search-input">
+    
+    <select name="log_type">
+        <option value="">전체 유형</option>
+        <option value="파손">파손</option>
+        <option value="오발송">오발송</option>
+        <option value="재발송">재발송</option>
+        <option value="발송누라">발송누락</option>
+        <option value="유통기한 건강">유통기한 경과</option>
+        <option value="기타">기타</option>
+    </select>
+
+    <select name="location">
+        <option value="">전체 위치</option>
+        <option value="온라인">온라인</option>
+        <option value="매장">매장</option>
+    </select>
+
+    <input type="date" name="start_date">
+    <input type="date" name="end_date">
+
+    <button type="submit">검색</button>
+</form>
+
+<table class="wide-table">
+    <thead>
+        <tr>
+            <th>등록일자</th>
+            <th>SKU</th>
+            <th>제품명</th>
+            <th>유형</th>
+            <th>수량</th>
+            <th>사유</th>
+            <th>위치</th>
+            <th>담당자</th>
+            <th>관리</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in logs %}
+        <tr>
+            <td>{{ row.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+            <td>{{ row.sku }}</td>
+            <td>{{ row.product_name }}</td>
+            <td>{{ row.log_type }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>{{ row.reason }}</td>
+            <td>{{ row.location }}</td>
+            <td>{{ row.created_by }}</td>
+            <td>
+                <a href="{{ url_for('edit_cs_log', log_id=row.id) }}">수정</a> |
+                <a href="{{ url_for('delete_cs_log', log_id=row.id) }}" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<style>
+    h2 {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #2f3542;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .search-input,
+    select,
+    input[type="date"] {
+        padding: 8px;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    button {
+        padding: 8px 16px;
+        background-color: #1e90ff;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+        background-color: #0f75d3;
+    }
+
+    .wide-table {
+        width: 100%;
+        min-width: 1000px;
+        table-layout: auto;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        margin-top: 20px;
+    }
+
+    .wide-table th,
+    .wide-table td {
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .wide-table th {
+        background-color: #eef3f8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    a {
+        text-decoration: none;
+        color: #1e90ff;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

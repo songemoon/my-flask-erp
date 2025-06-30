@@ -82,11 +82,20 @@ from auth import (
 )
 from schedule_routes import create_schedule_table
 from attendance import attendance_bp, create_attendance_table
+from cslogs import cslogs_bp
+
+conn = get_db_connection()
+cur = conn.cursor()
+cur.execute("DROP TABLE IF EXISTS users;")
+conn.commit()
+conn.close()
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
+
+app.register_blueprint(cslogs_bp)
 
 
 #@app.route("/delete-test-data")
@@ -506,7 +515,7 @@ if __name__ == "__main__":
 #    create_inventory_table()
 #    create_inventory_movement_table()
 #    create_supplier_table()
-#    create_user_table()
+    create_user_table()
 #    create_cost_history_table()
 #    create_order_table()
 #    create_sales_volume_table()

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}CS 로그 등록{% endblock %}
+
+{% block content %}
+<h2>📝 CS 로그 등록</h2>
+
+{% if message %}
+    <div class="flash-message">{{ message }}</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('register_cs_log') }}" class="form-container">
+    <div class="form-group">
+        <label for="sku">SKU</label>
+        <input type="text" id="sku" name="sku" required>
+    </div>
+
+    <div class="form-group">
+        <label for="product_name">제품명</label>
+        <input type="text" id="product_name" name="product_name" required>
+    </div>
+
+    <div class="form-group">
+        <label for="log_type">유형</label>
+        <select id="log_type" name="log_type" required>
+            <option value="">-- 선택 --</option>
+            <option>파손</option>
+            <option>오발송</option>
+            <option>재발송</option>
+            <option>발송누락</option>
+            <option>유통기한 경과</option>
+            <option>기타</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="quantity">수량</label>
+        <input type="number" id="quantity" name="quantity" required>
+    </div>
+
+    <div class="form-group">
+        <label for="reason">사유</label>
+        <textarea id="reason" name="reason" rows="3" required></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="location">위치</label>
+        <select id="location" name="location" required>
+            <option value="">-- 선택 --</option>
+            <option>온라인</option>
+            <option>매장</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <button type="submit">등록</button>
+    </div>
+</form>
+
+<style>
+    h2 {
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        color: #2f3542;
+    }
+
+    .form-container {
+        max-width: 500px;
+        margin-top: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.95rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #1e90ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .flash-message {
+        padding: 10px;
+        background-color: #dff9fb;
+        color: #0984e3;
+        border: 1px solid #74b9ff;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}

@@ -213,6 +213,14 @@
             </div>
 
             <div class="menu-section">
+                <div class="menu-title">📝 로그</div>
+                <div class="submenu">
+                    <a href="{{ url_for('cslogs.register_cs_log') }}">로그 등록</a>
+                    <a href="{{ url_for('cslogs.view_cs_logs') }}">로그 기록</a>
+                </div>
+            </div>
+
+            <div class="menu-section">
                 <div class="menu-title">📅 회사일정</div>
                 <div class="submenu">
                     <a href="{{ url_for('schedule.view_calendar') }}">캘린더</a>

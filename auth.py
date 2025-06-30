@@ -33,6 +33,7 @@ def create_user_table():
             password TEXT NOT NULL,
             name TEXT NOT NULL,
             english_name TEXT
+            accessible_menus TEXT
         )
     """)
     conn.commit()
