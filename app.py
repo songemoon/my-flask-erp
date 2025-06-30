@@ -98,10 +98,6 @@ app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
 app.register_blueprint(cslogs_bp)
 
-@app.route("/init-db")
-def init_db():
-    create_user_table()
-    return "✅ DB 초기화 완료"
 
 #@app.route("/delete-test-data")
 #def delete_test_data():
