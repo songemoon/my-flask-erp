@@ -12,7 +12,8 @@
 <form method="post" action="{{ url_for('cslogs.register_cs_log') }}" class="form-container">
     <div class="form-group">
         <label for="sku">SKU</label>
-        <input type="text" id="sku" name="sku" required>
+        <input type="text" id="sku" name="sku" autocomplete="off" required>
+        <div id="sku-suggestions" class="suggestions"></div>
     </div>
 
     <div class="form-group">
@@ -58,12 +59,6 @@
 </form>
 
 <style>
-    h2 {
-        margin-bottom: 20px;
-        font-size: 1.4rem;
-        color: #2f3542;
-    }
-
     .form-container {
         max-width: 500px;
         margin-top: 10px;
@@ -71,6 +66,7 @@
 
     .form-group {
         margin-bottom: 15px;
+        position: relative;
     }
 
     label {
@@ -112,5 +108,65 @@
         border-radius: 6px;
         margin-bottom: 15px;
     }
+
+    .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        z-index: 10;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    .suggestions div {
+        padding: 8px;
+        cursor: pointer;
+    }
+
+    .suggestions div:hover {
+        background-color: #f0f0f0;
+    }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const skuInput = document.getElementById("sku");
+    const nameInput = document.getElementById("product_name");
+    const suggestionBox = document.getElementById("sku-suggestions");
+
+    skuInput.addEventListener("input", function () {
+        const query = skuInput.value.trim();
+        if (query.length < 2) {
+            suggestionBox.innerHTML = "";
+            return;
+        }
+
+        fetch(`/api/get_products_by_barcode?identifier=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestionBox.innerHTML = "";
+                data.forEach(product => {
+                    const div = document.createElement("div");
+                    div.textContent = `${product.sku} - ${product.name}`;
+                    div.addEventListener("click", () => {
+                        skuInput.value = product.sku;
+                        nameInput.value = product.name;
+                        suggestionBox.innerHTML = "";
+                    });
+                    suggestionBox.appendChild(div);
+                });
+            });
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!suggestionBox.contains(e.target) && e.target !== skuInput) {
+            suggestionBox.innerHTML = "";
+        }
+    });
+});
+</script>
 {% endblock %}

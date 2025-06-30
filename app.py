@@ -131,8 +131,6 @@ create_attendance_table()
 app.register_blueprint(attendance_bp)
 
 @app.route("/admin/add_user", methods=["GET", "POST"])
-@login_required
-@menu_required("adduser")
 def admin_add_user():
     return auth_admin_add_user()
 

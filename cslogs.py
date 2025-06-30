@@ -1,10 +1,33 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from datetime import datetime
 from db import get_db_connection
+from auth import menu_required
+from functools import wraps
 
 cslogs_bp = Blueprint("cslogs", __name__)
 
+@cslogs_bp.route("/api/product_search", methods=["GET"])
+def api_product_search():
+    keyword = request.args.get("q", "").strip()
+
+    if not keyword:
+        return jsonify([])
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute("""
+        SELECT sku, name FROM products
+        WHERE sku ILIKE %s OR name ILIKE %s
+        LIMIT 10
+    """, (f"%{keyword}%", f"%{keyword}%"))
+
+    results = cursor.fetchall()
+    conn.close()
+    return jsonify(results)
+
+
 @cslogs_bp.route("/cs_logs/register", methods=["GET", "POST"])
+@menu_required("logs")
 def register_cs_log():
     if request.method == "POST":
         sku = request.form.get("sku", "").strip()
@@ -42,6 +65,7 @@ def register_cs_log():
 
 
 @cslogs_bp.route("/cs_logs")
+@menu_required("logs")
 def view_cs_logs():
     query = request.args.get("q", "").strip()
     conn = get_db_connection()
@@ -66,6 +90,7 @@ def view_cs_logs():
 
 
 @cslogs_bp.route("/cs_logs/edit/<int:log_id>", methods=["GET", "POST"])
+@menu_required("logs")
 def edit_cs_log(log_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -97,6 +122,7 @@ def edit_cs_log(log_id):
     return render_template("edit_cs_log.html", log=log)
 
 @cslogs_bp.route("/cs_logs/delete/<int:log_id>", methods=["POST"])
+@menu_required("logs")
 def delete_cs_log(log_id):
     conn = get_db_connection()
     cursor = conn.cursor()
