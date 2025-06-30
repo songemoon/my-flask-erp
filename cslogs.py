@@ -96,4 +96,13 @@ def edit_cs_log(log_id):
     conn.close()
     return render_template("edit_cs_log.html", log=log)
 
+@cslogs_bp.route("/cs_logs/delete/<int:log_id>", methods=["POST"])
+def delete_cs_log(log_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM cs_logs WHERE id = %s", (log_id,))
+    conn.commit()
+    conn.close()
+    flash("🗑️ 로그가 삭제되었습니다.")
+    return redirect(url_for("cslogs.view_cs_logs"))
 
