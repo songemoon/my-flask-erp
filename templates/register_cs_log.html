@@ -13,7 +13,7 @@
     <div class="form-group">
         <label for="identifier">제품 식별자 (SKU 또는 제품명)</label>
         <input type="text" id="identifier" placeholder="검색어 입력">
-        <button type="button" onclick="openProductSearch()">제품 찾기</button>
+        <button type="button" class="search-btn" onclick="openProductSearch()">🔍 찾기</button>
     </div>
 
     <div id="selected-product" style="margin-top: 1em;">
@@ -139,6 +139,19 @@
     .suggestions div:hover {
         background-color: #f0f0f0;
     }
+
+    .search-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        margin-left: 5px;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
 </style>
 <script>
 function openProductSearch() {
