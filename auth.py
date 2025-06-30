@@ -20,7 +20,7 @@ def menu_required(menu_key):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if menu_key not in session.get("menus", []):
-                flash("접근 권한이 없습니다.", "warning")
+                flash("❌접근 권한이 없습니다.", "warning")
                 return redirect(url_for("home"))
             return f(*args, **kwargs)
         return decorated_function
