@@ -138,7 +138,7 @@ def sales_overview():
     cursor.execute("""
         SELECT sku, warehouse, SUM(total_qty) AS qty
         FROM inventory
-        WHERE is_active = TRUE
+        WHERE is_active = 1
         GROUP BY sku, warehouse
     """)
     wh_data = cursor.fetchall()
