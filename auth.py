@@ -4,6 +4,7 @@ from functools import wraps
 import psycopg2
 import psycopg2.extras
 from db import get_db_connection
+import json
 
 
 def login_required(view_function):
@@ -13,6 +14,17 @@ def login_required(view_function):
             return redirect(url_for("login", next=request.path))
         return view_function(*args, **kwargs)
     return wrapper
+
+def menu_required(menu_key):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if menu_key not in session.get("menus", []):
+                flash("접근 권한이 없습니다.", "warning")
+                return redirect(url_for("home"))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 def authenticate_user(username, password):
     hashed_pw = hashlib.sha256(password.encode()).hexdigest()
@@ -51,6 +63,7 @@ def admin_add_user():
         password     = request.form.get("password", "").strip()
         name         = request.form.get("name", "").strip()
         english_name = request.form.get("english_name", "").strip()
+        menus        = request.form.getlist("menus")  # 🔹 체크박스 값들 리스트로 가져옴
 
         if not (username and password and name and english_name):
             message = "모든 필드를 입력하세요."
@@ -60,9 +73,9 @@ def admin_add_user():
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             try:
                 cursor.execute("""
-                    INSERT INTO users (username, password, name, english_name)
-                    VALUES (%s, %s, %s, %s)
-                """, (username, pw_hash, name, english_name))
+                    INSERT INTO users (username, password, name, english_name, accessible_menus)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (username, pw_hash, name, english_name, json.dumps(menus)))
                 conn.commit()
                 message = "직원이 등록되었습니다."
             except Exception:
@@ -105,6 +118,8 @@ def login():
                 "name":     user["name"],
                 "english_name":    user["english_name"]
             }
+            menus = user.get("accessible_menus")
+            session["menus"] = json.loads(menus) if menus else []
             next_page = request.args.get("next")
             return redirect(next_page or url_for("home"))
         else:

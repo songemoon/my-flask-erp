@@ -99,6 +99,7 @@ def edit_cs_log(log_id):
 
 
 @cslogs_bp.route("/cs_logs/delete/<int:log_id>", methods=["POST"])
+@menu_required("logs")
 def delete_cs_log(log_id):
     conn = get_db_connection()
     cursor = conn.cursor()

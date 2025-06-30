@@ -78,7 +78,8 @@ from auth import (
     admin_delete_user as auth_admin_delete_user,
     admin_user_list as auth_admin_user_list,
     admin_user_manage,
-    change_password
+    change_password,
+    menu_required,
 )
 from schedule_routes import create_schedule_table
 from attendance import attendance_bp, create_attendance_table
@@ -130,11 +131,14 @@ create_attendance_table()
 app.register_blueprint(attendance_bp)
 
 @app.route("/admin/add_user", methods=["GET", "POST"])
+@login_required
+@menu_required("adduser")
 def admin_add_user():
     return auth_admin_add_user()
 
 @app.route("/admin/users/delete/<int:user_id>", methods=["POST"])
 @login_required  # 관리자 권한 검사 추가 권장
+@menu_required("adduser")
 def delete_user_route(user_id):
     # 관리자 권한 체크 로직 별도 구현 권장
     return auth_admin_delete_user(user_id)
@@ -154,6 +158,7 @@ def logout_route():
     return redirect(url_for('login'))
 
 @app.route("/admin/users", methods=["GET", "POST"])
+@menu_required("adduser")
 def admin_user_manage_route():
     # 로그인/관리자 권한 체크는 별도 처리 권장
     return admin_user_manage()
@@ -171,11 +176,13 @@ def register_product():
 
 @app.route("/products")
 @login_required
+@menu_required("products")
 def view_products():
     return product_view_products()
 
 @app.route('/products/upload', methods=['GET', 'POST'])
 @login_required
+@menu_required("products")
 def upload_products():
     if request.method == 'POST':
         file = request.files.get('csv_file')
@@ -229,20 +236,24 @@ def upload_products():
 
 @app.route("/edit/<int:product_id>", methods=["GET", "POST"])
 @login_required
+@menu_required("products")
 def edit_product(product_id):
     return product_edit_product(product_id)
 
 @app.route("/delete/<int:product_id>")
 @login_required
+@menu_required("products")
 def delete_product(product_id):
     return product_delete_product(product_id)
 
 @app.route("/products/manage", methods=["GET", "POST"])
 @login_required
+@menu_required("products")
 def manage_products():
     return product_manage_products()
 
 @app.route("/api/get_products_by_barcode", methods=["GET"])
+@menu_required("products")
 def get_products_by_barcode():
     identifier = request.args.get("identifier", "").strip()
 
@@ -268,31 +279,37 @@ def get_products_by_barcode():
 
 @app.route("/inventory/manage", methods=["GET", "POST"])
 @login_required
+@menu_required("warehouse")
 def manage_inventory():
     return inventory_manage_inventory()
 
 @app.route("/inventory/in", methods=["GET", "POST"])
 @login_required
+@menu_required("warehouse")
 def inventory_in():
     return inventory_inventory_in()
 
 @app.route("/inventory/out", methods=["GET", "POST"])
 @login_required
+@menu_required("warehouse")
 def inventory_out():
     return inventory_inventory_out()
 
 @app.route("/inventory/transfer", methods=["GET", "POST"])
 @login_required
+@menu_required("warehouse")
 def warehouse_transfer():
     return inventory_warehouse_transfer()
 
 @app.route("/inventory/search", methods=["GET"])
 @login_required
+@menu_required("warehouse")
 def search_inventory():
     return inventory_search_inventory()
 
 @app.route("/inventory/movements", methods=["GET"])
 @login_required
+@menu_required("warehouse")
 def view_movements_view():
     return view_movements()
 
@@ -304,76 +321,91 @@ def manage_suppliers():
 
 @app.route("/suppliers/delete/<int:supplier_id>", methods=["POST"])
 @login_required
+@menu_required("orders")
 def delete_supplier(supplier_id):
     return supplier_delete_supplier(supplier_id)
 
 @app.route("/api/product_search")
 @login_required
+@menu_required("orders")
 def product_search():
     return product_product_search()
 
 @app.route("/orders/new", methods=["GET", "POST"])
 @login_required
+@menu_required("orders")
 def new_order():
     return order_new_order()
 
 @app.route("/orders/edit/<path:order_code>", methods=["GET", "POST"])
 @login_required
+@menu_required("orders")
 def edit_order(order_code):
     return order_edit_order(order_code)
 
 @app.route("/orders/<order_code>")
 @login_required
+@menu_required("orders")
 def view_order(order_code):
     return order_view_order(order_code)
 
 @app.route("/orders", methods=["GET"])
 @login_required
+@menu_required("orders")
 def list_orders():
     return order_list_orders()
 
 @app.route("/orders/print/<order_code>")
 @login_required
+@menu_required("addusorderser")
 def print_order(order_code):
     return order_print_order(order_code)
 
 @app.route("/orders/delete/<order_code>", methods=["POST"])
 @login_required
+@menu_required("orders")
 def delete_order_route(order_code):
     return order_delete_order(order_code)
 
 @app.route("/inventory/receive/<order_code>", methods=["GET", "POST"])
 @login_required
+@menu_required("orders")
 def receive_order(order_code):
     return order_receive_order(order_code)
 
 @app.route("/cost/register/<order_code>", methods=["GET", "POST"])
 @login_required
+@menu_required("orders")
 def register_cost(order_code):
     return cost_register_cost(order_code)
 
 @app.route("/cost/history")
 @login_required
+@menu_required("orders")
 def view_cost_history():
     return cost_view_cost_history()
 
 @app.route("/sales/upload", methods=["GET", "POST"])
 @login_required
+@menu_required("sales")
 def upload_sales_volume():
     return sales_upload_sales_volume()
 
 @app.route("/sales/upload_stock", methods=["GET", "POST"])
 @login_required
+@menu_required("sales")
 def upload_real_stock():
     return stock_upload_real_stock()
 
 @app.route("/sales/overview")
 @login_required
+@menu_required("sales")
 def sales_overview():
     return sales_sales_overview()
 
 @app.route('/api/product_info')
 @login_required
+@menu_required("sales")
 def api_product_info():
     return product_info()
 
@@ -391,6 +423,7 @@ def health_db():
         return jsonify(status="error", detail=str(e)), 500
 
 @app.route('/orders/plan_print/<order_code>')
+@menu_required("orders")
 def print_order_plan(order_code):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -489,6 +522,18 @@ def create_cs_logs_table():
     conn.commit()
     conn.close()
     print("✅ cs_logs 테이블 생성 완료")
+
+
+@cslogs_bp.route("/cs_logs/delete/<int:log_id>", methods=["POST"])
+@menu_required("logs")
+def delete_cs_log(log_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM cs_logs WHERE id = %s", (log_id,))
+    conn.commit()
+    conn.close()
+    flash("🗑️ 로그가 삭제되었습니다.")
+    return redirect(url_for("cslogs.view_cs_logs"))
 
 
 #@app.route("/init-db")
