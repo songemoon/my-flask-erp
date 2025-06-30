@@ -14,3 +14,7 @@ class Config:
     
     # 로그인 세션 유지 시간
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+

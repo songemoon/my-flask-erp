@@ -77,14 +77,14 @@ def sales_overview():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # 제품 정보
+    # ✅ 제품 정보 미리 조회 (sku 기준)
     cursor.execute("SELECT sku, name, barcode FROM products")
     product_info = {
         row["sku"]: {"product_name": row["name"], "barcode": row["barcode"]}
         for row in cursor.fetchall()
     }
 
-    # 우커머스 재고 (= real_stock)
+    # ✅ 실재고 데이터
     cursor.execute("""
         SELECT
             sku,
@@ -95,82 +95,79 @@ def sales_overview():
         GROUP BY sku, expiry_text
     """)
     stock_data = cursor.fetchall()
+
     stock_dict = {}
     for row in stock_data:
         key = (row["sku"], row["expiry_text"])
         stock_dict[key] = {
             "sku": row["sku"],
-            "product_name": row["product_name"],
+            "product_name": row["product_name"],  # 일단 실재고 값 (나중에 products 기준으로 덮어씀)
             "expiry_text": row["expiry_text"],
             "real_stock": row["quantity"]
         }
 
-    # 최근 12개월
-    recent_months = [(date.today() - relativedelta(months=i)).strftime("%Y-%m") for i in range(12)]
+    # ✅ 최근 12개월
+    recent_months = []
+    today = date.today()
+    for i in range(12):
+        dt = today - relativedelta(months=i)
+        recent_months.append(dt.strftime("%Y-%m"))
 
-    # 판매량
+    # ✅ 판매량 데이터
     cursor.execute("SELECT sku, year, month, quantity FROM sales_volume")
     sales_data = cursor.fetchall()
+
     sales_by_sku = defaultdict(lambda: defaultdict(int))
     for row in sales_data:
         ym = f"{row['year']:04d}-{row['month']:02d}"
         if ym in recent_months:
             sales_by_sku[row["sku"]][ym] += row["quantity"]
 
-    # 평균 판매량 (최근 4개월)
+    # ✅ 평균판매량 (최근 4개월)
     recent_4 = recent_months[:4]
-    avg_sales = {
-        sku: round(sum(month_dict.get(m, 0) for m in recent_4) / 4, 2)
-        for sku, month_dict in sales_by_sku.items()
-    }
+    avg_sales = {}
+    for sku, month_dict in sales_by_sku.items():
+        values = [month_dict.get(m, 0) for m in recent_4]
+        avg_sales[sku] = round(sum(values) / 4, 2) if values else 0
 
-    # 입고예정
-    cursor.execute("SELECT order_code, product_sku, quantity FROM orders")
+    # ✅ 입고예정 계산
+    cursor.execute("SELECT order_code, product_sku, product_name, quantity FROM orders")
     all_orders = cursor.fetchall()
+
     cursor.execute("SELECT sku, order_number FROM inventory")
     received = set((r["sku"], r["order_number"]) for r in cursor.fetchall())
+
     incoming = defaultdict(int)
     for row in all_orders:
-        if (row["product_sku"], row["order_code"]) not in received:
+        key = (row["product_sku"], row["order_code"])
+        if key not in received:
             incoming[row["product_sku"]] += row["quantity"]
-
-    # 창고 기준 재고 계산
-    cursor.execute("""
-        SELECT sku, warehouse, SUM(total_qty) AS qty
-        FROM inventory
-        WHERE is_active = TRUE
-        GROUP BY sku, warehouse
-    """)
-    wh_data = cursor.fetchall()
-    total_stock = defaultdict(int)
-    available_stock = defaultdict(int)
-    for row in wh_data:
-        sku = row["sku"]
-        warehouse = row["warehouse"]
-        qty = row["qty"]
-        if warehouse in ("신창고 A", "매장창고 B"):
-            total_stock[sku] += qty
-        elif warehouse == "가용재고 S":
-            available_stock[sku] += qty
 
     conn.close()
 
-    # 최종 병합
+    # ✅ 결과 병합
     final_data = []
     for (sku, expiry), stock in stock_dict.items():
         row = dict(stock)
-        product = product_info.get(sku, {})
-        row["product_name"] = product.get("product_name", row["product_name"])
-        row["barcode"] = product.get("barcode", "")
+
+        # 🔁 제품 정보 덮어쓰기
+        product = product_info.get(sku)
+        if product:
+            row["product_name"] = product["product_name"]
+            row["barcode"] = product["barcode"]
+        else:
+            row["product_name"] = row.get("product_name", "")
+            row["barcode"] = ""
+
         row["incoming_qty"] = incoming.get(sku, 0)
         row["avg_sales"] = avg_sales.get(sku, 0)
-        row["total_stock"] = total_stock.get(sku, 0)
-        row["available_stock"] = available_stock.get(sku, 0)
-        row["stock_ratio"] = round((row["total_stock"] + row["available_stock"]) / row["avg_sales"], 2) if row["avg_sales"] else 0
+
         for month in recent_months:
             row[month] = sales_by_sku.get(sku, {}).get(month, 0)
+
         final_data.append(row)
 
+    # ✅ 검색 필터
     if query:
         final_data = [
             r for r in final_data

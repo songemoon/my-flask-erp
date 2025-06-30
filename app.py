@@ -461,6 +461,25 @@ def print_order_plan(order_code):
     supplier_name=order["supplier_name"],   # 거래처명
     product_data=product_data
 )
+def create_cs_logs_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cs_logs (
+            id SERIAL PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            sku VARCHAR(50) NOT NULL,
+            product_name VARCHAR(100),
+            log_type VARCHAR(30),
+            quantity INTEGER,
+            reason TEXT,
+            location VARCHAR(10),
+            created_by VARCHAR(50)
+        )
+    """)
+    conn.commit()
+    conn.close()
+    print("✅ cs_logs 테이블 생성 완료")
 
 
 #@app.route("/init-db")
@@ -481,7 +500,8 @@ def print_order_plan(order_code):
 
 
 
-#if __name__ == "__main__":
+if __name__ == "__main__":
+    create_cs_logs_table()
 #    create_table()
 #    create_inventory_table()
 #    create_inventory_movement_table()
@@ -492,4 +512,4 @@ def print_order_plan(order_code):
 #    create_sales_volume_table()
 #    create_real_stock_table()
 #    add_english_name_column()
-#   app.run(debug=True)
+   app.run(debug=True)

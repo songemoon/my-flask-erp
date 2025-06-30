@@ -10,44 +10,72 @@
     <button type="submit">검색</button>
 </form>
 
+<div style="background-color: #fff3cd; color: #c0392b; padding: 10px 16px; border: 1px solid #ffeeba; border-radius: 6px; font-size: 0.95rem; margin-bottom: 10px;">
+    ⚠️ <strong>우커머스 재고는 창고재고보다 같거나 적어야 합니다!</strong>
+</div>
+
+
 <div class="table-wrapper">
     <table id="sales-table" class="wide-table">
         <thead>
             <tr>
                 <th onclick="sortTable(0)">SKU</th>
                 <th onclick="sortTable(1)">제품명</th>
-                <th onclick="sortTable(2)">바코드</th>
-                <th onclick="sortTable(3)">실재고</th>
-                <th onclick="sortTable(4)">유통기한</th>
+                <th onclick="sortTable(2)">창고재고</th>
+                <th onclick="sortTable(3)">가용재고</th>
+                <th onclick="sortTable(4)">우커머스</th>                
                 <th onclick="sortTable(5)">입고예정</th>
-                <th onclick="sortTable(6)">평균 판매</th>
-                <th onclick="sortTable(7)">재고/평균</th>
-                {% for m in months %}
-                    <th onclick="sortTable({{ loop.index + 7 }})">{{ m }}</th>
-                {% endfor %}
+                <th onclick="sortTable(6)">유통기한</th>
+                <th onclick="sortTable(7)">평균 판매</th>
+                <th onclick="sortTable(8)">재고/평균</th>
+                <th>상세</th>
             </tr>
         </thead>
+
         <tbody>
             {% for row in results %}
-            {% set ratio = (row.real_stock or 0) / (row.avg_sales or 1) %}
+            {% set ratio = ((row.total_stock or 0) + (row.available_stock or 0)) / (row.avg_sales or 1) %}
             {% set highlight_class = 'low-row' if ratio <= 1 else 'high-row' if ratio >= 12 else '' %}
             <tr class="{{ highlight_class }}">
                 <td>{{ row.sku }}</td>
                 <td class="product-name-cell">{{ row.product_name or '' }}</td>
-                <td>{{ row.barcode or '' }}</td>
+                <td>{{ row.total_stock or 0 }}</td>
+                <td>{{ row.available_stock or 0 }}</td>
                 <td>{{ row.real_stock or 0 }}</td>
-                <td>{{ row.expiry_text or '' }}</td>
                 <td>{{ row.incoming_qty or 0 }}</td>
+                <td>{{ row.expiry_text or '' }}</td>
                 <td><strong>{{ row.avg_sales or 0 }}</strong></td>
                 <td>{{ ratio|round(2) }}개월</td>
-                {% for m in months %}
-                    <td>{{ row[m] or 0 }}</td>
-                {% endfor %}
+                <td>
+                    <button type="button" onclick="toggleDetails('{{ row.sku }}')">상세</button>
+                </td>
+            </tr>
+            <tr id="details-{{ row.sku }}" style="display: none; background-color: #f1f2f6;">
+                <td colspan="10">
+                    <strong>📈 지난 12개월 판매량</strong>
+                    <table style="margin-top: 10px; width: 100%;">
+                        <thead>
+                            <tr>
+                                {% for m in months %}
+                                <th>{{ m }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                {% for m in months %}
+                                <td>{{ row[m] or 0 }}</td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 <style>
     h2 {
         font-size: 1.2rem;
@@ -66,7 +94,7 @@
     }
 
     button {
-        padding: 8px 16px;
+        padding: 8px 12px;
         background-color: #1e90ff;
         color: white;
         font-weight: bold;
@@ -114,11 +142,6 @@
     .product-name-cell {
         text-align: left !important;
         padding-left: 12px !important;
-        white-space: nowrap;
-    }
-
-    .wide-table tr:nth-child(even):not(.low-row):not(.high-row) {
-        background-color: #f9fafc;
     }
 
     .low-row {
@@ -140,6 +163,7 @@
         font-size: 0.8rem;
         color: #888;
     }
+
     .table-wrapper {
         width: 100%;
         overflow-x: auto;
@@ -147,40 +171,46 @@
 </style>
 
 <script>
-    let sortDirection = {};
+    function toggleDetails(sku) {
+        const row = document.getElementById("details-" + sku);
+        if (row.style.display === "none") {
+            row.style.display = "table-row";
+        } else {
+            row.style.display = "none";
+        }
+    }
 
+    let sortDirection = {};
     function sortTable(colIndex) {
         const table = document.getElementById("sales-table");
         const tbody = table.tBodies[0];
-        const rows = Array.from(tbody.rows);
+        const rows = Array.from(tbody.rows).filter((_, i) => i % 2 === 0); // 상위 행만 정렬
         const header = table.tHead.rows[0].cells[colIndex];
 
         sortDirection[colIndex] = !sortDirection[colIndex];
-
         for (let cell of table.tHead.rows[0].cells) {
             cell.classList.remove("sorted-asc", "sorted-desc");
         }
-
         header.classList.add(sortDirection[colIndex] ? "sorted-asc" : "sorted-desc");
 
         rows.sort((a, b) => {
             let aText = a.cells[colIndex].innerText.trim().replace(" 개월", "");
             let bText = b.cells[colIndex].innerText.trim().replace(" 개월", "");
-
             let aNum = parseFloat(aText.replace(",", ""));
             let bNum = parseFloat(bText.replace(",", ""));
             const isNumeric = !isNaN(aNum) && !isNaN(bNum);
-
-            if (isNumeric) {
-                return sortDirection[colIndex] ? aNum - bNum : bNum - aNum;
-            } else {
-                return sortDirection[colIndex]
+            return isNumeric
+                ? (sortDirection[colIndex] ? aNum - bNum : bNum - aNum)
+                : (sortDirection[colIndex]
                     ? aText.localeCompare(bText)
-                    : bText.localeCompare(aText);
-            }
+                    : bText.localeCompare(aText));
         });
 
-        rows.forEach(row => tbody.appendChild(row));
+        rows.forEach(row => {
+            const detailRow = row.nextElementSibling;
+            tbody.appendChild(row);
+            tbody.appendChild(detailRow);
+        });
     }
 </script>
 {% endblock %}
