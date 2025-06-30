@@ -45,8 +45,8 @@ def create_user_table():
             username VARCHAR(255) UNIQUE NOT NULL,
             password TEXT NOT NULL,
             name TEXT NOT NULL,
-            english_name TEXT
-            accessible_menus TEXT,
+            english_name TEXT,
+            accessible_menus TEXT
         )
     """)
     conn.commit()
