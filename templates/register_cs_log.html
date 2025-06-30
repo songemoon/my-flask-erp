@@ -9,7 +9,7 @@
     <div class="flash-message">{{ message }}</div>
 {% endif %}
 
-<form method="post" action="{{ url_for('register_cs_log') }}" class="form-container">
+<form method="post" action="{{ url_for('cslogs.register_cs_log') }}" class="form-container">
     <div class="form-group">
         <label for="sku">SKU</label>
         <input type="text" id="sku" name="sku" required>
