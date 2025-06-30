@@ -187,6 +187,7 @@ def create_sales_volume_table():
         CREATE TABLE IF NOT EXISTS sales_volume (
             id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
+            product_name TEXT,
             year INTEGER NOT NULL,
             month INTEGER NOT NULL,
             quantity INTEGER NOT NULL,
@@ -212,3 +213,4 @@ def add_product_name_column():
 
 # 아래 한 줄을 실행 시점에만 잠깐 추가
 #add_product_name_column()
+
