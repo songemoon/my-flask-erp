@@ -43,7 +43,7 @@ def register_cs_log():
         quantity = request.form.get("quantity", "").strip()
         reason = request.form.get("reason", "").strip()
         location = request.form.get("location", "").strip()
-        created_by = session.get("user", "")
+        created_by = session.get("user", {}).get("name", "")
         created_at = datetime.now()
 
         if not sku or not log_type or not quantity:
