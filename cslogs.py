@@ -112,12 +112,13 @@ def edit_cs_log(log_id):
 
         cursor.execute("""
             UPDATE cs_logs
-            SET log_type = %(log_type)s,
-                quantity = %(quantity)s,
-                reason = %(reason)s,
-                location = %(location)s
+            SET log_type = %s,
+                quantity = %s,
+                reason = %s,
+                location = %s
             WHERE id = %s
         """, (data["log_type"], data["quantity"], data["reason"], data["location"], log_id))
+
         conn.commit()
         conn.close()
         flash("✅ 로그가 수정되었습니다.")
