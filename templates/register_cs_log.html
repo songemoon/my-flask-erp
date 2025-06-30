@@ -11,15 +11,18 @@
 
 <form method="post" action="{{ url_for('cslogs.register_cs_log') }}" class="form-container">
     <div class="form-group">
-        <label for="sku">SKU</label>
-        <input type="text" id="sku" name="sku" autocomplete="off" required>
-        <div id="sku-suggestions" class="suggestions"></div>
+        <label for="identifier">제품 식별자 (SKU 또는 제품명)</label>
+        <input type="text" id="identifier" placeholder="검색어 입력">
+        <button type="button" onclick="openProductSearch()">제품 찾기</button>
     </div>
 
-    <div class="form-group">
-        <label for="product_name">제품명</label>
-        <input type="text" id="product_name" name="product_name" required>
+    <div id="selected-product" style="margin-top: 1em;">
+        <p><b>SKU:</b> <span id="sku-text"></span></p>
+        <p><b>제품명:</b> <span id="product-name-text"></span></p>
     </div>
+
+    <input type="hidden" name="sku" id="sku">
+    <input type="hidden" name="product_name" id="product_name">
 
     <div class="form-group">
         <label for="log_type">유형</label>
@@ -56,6 +59,12 @@
     <div class="form-group">
         <button type="submit">등록</button>
     </div>
+    <div id="product-modal" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:white; border:1px solid #ccc; padding:1em; z-index:1000;">
+        <h4>🔍 제품 선택</h4>
+        <ul id="product-list"></ul>
+        <button onclick="closeProductModal()">닫기</button>
+    </div>
+
 </form>
 
 <style>
@@ -131,42 +140,45 @@
         background-color: #f0f0f0;
     }
 </style>
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const skuInput = document.getElementById("sku");
-    const nameInput = document.getElementById("product_name");
-    const suggestionBox = document.getElementById("sku-suggestions");
+function openProductSearch() {
+    const query = document.getElementById("identifier").value.trim();
+    if (!query) {
+        alert("검색어를 입력하세요.");
+        return;
+    }
 
-    skuInput.addEventListener("input", function () {
-        const query = skuInput.value.trim();
-        if (query.length < 2) {
-            suggestionBox.innerHTML = "";
-            return;
-        }
-
-        fetch(`/api/get_products_by_barcode?identifier=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                suggestionBox.innerHTML = "";
-                data.forEach(product => {
-                    const div = document.createElement("div");
-                    div.textContent = `${product.sku} - ${product.name}`;
-                    div.addEventListener("click", () => {
-                        skuInput.value = product.sku;
-                        nameInput.value = product.name;
-                        suggestionBox.innerHTML = "";
-                    });
-                    suggestionBox.appendChild(div);
+    fetch(`/api/product_search?q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("product-list");
+            list.innerHTML = "";
+            if (data.length === 0) {
+                list.innerHTML = "<li>검색 결과 없음</li>";
+            } else {
+                data.forEach(p => {
+                    const li = document.createElement("li");
+                    li.textContent = `${p.sku} - ${p.name}`;
+                    li.style.cursor = "pointer";
+                    li.onclick = () => selectProduct(p);
+                    list.appendChild(li);
                 });
-            });
-    });
+            }
+            document.getElementById("product-modal").style.display = "block";
+        });
+}
 
-    document.addEventListener("click", function (e) {
-        if (!suggestionBox.contains(e.target) && e.target !== skuInput) {
-            suggestionBox.innerHTML = "";
-        }
-    });
-});
+function selectProduct(product) {
+    document.getElementById("sku-text").innerText = product.sku;
+    document.getElementById("product-name-text").innerText = product.name;
+    document.getElementById("sku").value = product.sku;
+    document.getElementById("product_name").value = product.name;
+    document.getElementById("product-modal").style.display = "none";
+}
+
+function closeProductModal() {
+    document.getElementById("product-modal").style.display = "none";
+}
 </script>
+
 {% endblock %}

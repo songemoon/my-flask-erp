@@ -138,42 +138,5 @@
         text-decoration: underline;
     }
 </style>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const skuInput = document.getElementById("sku");
-    const nameInput = document.getElementById("product_name");
-    const suggestionBox = document.getElementById("sku-suggestions");
-
-    skuInput.addEventListener("input", function () {
-        const query = skuInput.value.trim();
-        if (query.length < 2) {
-            suggestionBox.innerHTML = "";
-            return;
-        }
-
-        fetch(`/api/product_search?q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                suggestionBox.innerHTML = "";
-                data.forEach(product => {
-                    const div = document.createElement("div");
-                    div.textContent = `${product.sku} - ${product.name}`;
-                    div.addEventListener("click", () => {
-                        skuInput.value = product.sku;
-                        nameInput.value = product.name;
-                        suggestionBox.innerHTML = "";
-                    });
-                    suggestionBox.appendChild(div);
-                });
-            });
-    });
-
-    document.addEventListener("click", function (e) {
-        if (!suggestionBox.contains(e.target) && e.target !== skuInput) {
-            suggestionBox.innerHTML = "";
-        }
-    });
-});
-</script>
 
 {% endblock %}

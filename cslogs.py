@@ -9,21 +9,26 @@ cslogs_bp = Blueprint("cslogs", __name__)
 @cslogs_bp.route("/api/product_search", methods=["GET"])
 def api_product_search():
     keyword = request.args.get("q", "").strip()
-
     if not keyword:
         return jsonify([])
 
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     cursor.execute("""
-        SELECT sku, name FROM products
-        WHERE sku ILIKE %s OR name ILIKE %s
-        LIMIT 10
-    """, (f"%{keyword}%", f"%{keyword}%"))
+        SELECT sku, name, english_name
+        FROM products
+        WHERE sku ILIKE %s
+           OR barcode ILIKE %s
+           OR name ILIKE %s
+        ORDER BY name
+        LIMIT 20
+    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
 
     results = cursor.fetchall()
     conn.close()
     return jsonify(results)
+
 
 
 @cslogs_bp.route("/cs_logs/register", methods=["GET", "POST"])
